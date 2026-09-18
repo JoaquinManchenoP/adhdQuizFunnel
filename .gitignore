@@ -1,0 +1,5 @@
+node_modules
+.netlify
+.env
+.netlify-dev.pid
+.netlify-dev.log
