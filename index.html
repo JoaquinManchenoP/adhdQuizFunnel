@@ -426,20 +426,20 @@
     padding: 9px 0 14px;
   }
   .breather-icon {
+    width: 240px; height: 240px;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 28px;
   }
   .breather-img {
     display: block;
-    width: 100%; height: 100%;
-    object-fit: cover;
+    max-width: 100%; max-height: 100%;
+    /* contain, not cover — every source image keeps its full, uncropped
+       frame; the source images have different native aspect ratios, so
+       each is scaled down to fit this identical 240x240 slot rather
+       than cropped to fill it. */
+    object-fit: contain;
     border-radius: var(--radius-lg);
   }
-  /* Each breather's image keeps its own native aspect ratio (no cropping)
-     — size chosen per image, not a shared default. */
-  .breather-icon--1 { width: 236px; height: 236px; } /* square source, busy/symmetric scene reads best large */
-  .breather-icon--2 { width: 210px; height: 280px; } /* tall source, mostly open sky above a small seated figure — kept narrow so it doesn't dominate */
-  .breather-icon--3 { width: 246px; height: 266px; } /* near-square source, diagonal motion of two figures needs a touch more width than height */
   .breather-text {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
