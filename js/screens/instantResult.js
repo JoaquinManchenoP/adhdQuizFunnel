@@ -30,7 +30,7 @@ export function renderInstantResult(state) {
       </div>
       <button class="btn primary" onclick="goEmailCapture()">Get my free full results</button>
       <div class="microcopy">Takes 10 seconds. No spam, ever.</div>
-      <div class="disclaimer">This self-assessment is based on the structure of a validated adult ADHD screening tool but is not a diagnostic instrument and cannot diagnose ADHD or any other condition. It's intended to help you reflect on patterns worth discussing with a licensed healthcare provider. Only a qualified professional can provide an actual diagnosis.</div>
+      <div class="disclaimer">This self assessment is based on the structure of a validated adult ADHD screening tool but is not a diagnostic instrument and cannot diagnose ADHD or any other condition. It's intended to help you reflect on patterns worth discussing with a licensed healthcare provider. Only a qualified professional can provide an actual diagnosis.</div>
     </div>
   `;
 }

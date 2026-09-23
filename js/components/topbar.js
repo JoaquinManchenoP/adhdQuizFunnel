@@ -13,7 +13,7 @@ export function topbarHtml(state, showTitle) {
       <button class="back" onclick="goBack()" aria-label="Back" style="visibility:${hidden ? 'hidden' : 'visible'};">
         <i data-lucide="chevron-left" width="25" height="25" color="var(--text-strong)"></i>
       </button>
-      ${showTitle ? `<div class="label">ADHD self-check</div><div class="spacer"></div>` : ''}
+      ${showTitle ? `<div class="label">ADHD self check</div><div class="spacer"></div>` : ''}
     </div>
   `;
 }

@@ -69,11 +69,11 @@ export function setAnswer(index, value) { answers[index] = value; }
 /* ---------------- Scoring ---------------- */
 export function partAScore() { return answers.slice(0, PART_A_COUNT).reduce((s, v) => s + (v ?? 0), 0); }
 export function partABand(percent) {
-  if (percent < 15) return { label: "Low signs of ADHD-related traits", cls: "low", copy: "Few ADHD-related patterns showed up in your answers." };
-  if (percent < 35) return { label: "Mild signs of ADHD-related traits", cls: "low", copy: "A few ADHD-related patterns showed up, but not often." };
-  if (percent < 55) return { label: "Moderate signs of ADHD-related traits", cls: "", copy: "Some of your answers match patterns common in ADHD. Others not so much." };
-  if (percent < 75) return { label: "Strong signs of ADHD-related traits", cls: "high", copy: "Several ADHD-related patterns showed up often. It may be worth taking a closer look." };
-  return { label: "Very strong signs of ADHD-related traits", cls: "high", copy: "Most core ADHD-related patterns showed up often. Talking to a professional could help." };
+  if (percent < 15) return { label: "Low signs of ADHD related traits", cls: "low", copy: "Few ADHD related patterns showed up in your answers." };
+  if (percent < 35) return { label: "Mild signs of ADHD related traits", cls: "low", copy: "A few ADHD related patterns showed up, but not often." };
+  if (percent < 55) return { label: "Moderate signs of ADHD related traits", cls: "", copy: "Some of your answers match patterns common in ADHD. Others not so much." };
+  if (percent < 75) return { label: "Strong signs of ADHD related traits", cls: "high", copy: "Several ADHD related patterns showed up often. It may be worth taking a closer look." };
+  return { label: "Very strong signs of ADHD related traits", cls: "high", copy: "Most core ADHD related patterns showed up often. Talking to a professional could help." };
 }
 export function fullScoring() {
   const inattentiveIdx = [0,1,2,6,8,9,10,11];
@@ -85,8 +85,8 @@ export function fullScoring() {
   const hyperImpulsivePct = hyperImpulsive / (hyperImpulsiveIdx.length * 4);
   const diff = (inattentivePct - hyperImpulsivePct) * 100;
   let subtype = "Combined";
-  if (diff > 15) subtype = "Inattentive-leaning";
-  else if (diff < -15) subtype = "Hyperactive-Impulsive-leaning";
+  if (diff > 15) subtype = "Inattentive leaning";
+  else if (diff < -15) subtype = "Hyperactive Impulsive leaning";
   const totalMax = QUESTIONS.reduce((s, q) => s + ((q.options ? q.options.length : OPTIONS.length) - 1), 0);
   return { inattentive, hyperImpulsive, inattentivePct, hyperImpulsivePct, subtype, totalScore: answers.reduce((s,v) => s + (v ?? 0), 0), totalMax };
 }

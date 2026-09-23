@@ -23,7 +23,7 @@ export const BREATHERS = [
   { message: "It's okay if some of these feel familiar. That's kind of the point.", solid: "var(--accent)", image: "assets/breathers/breather-1-overwhelm.png", alt: "A person overwhelmed at a desk, buried under stacks of paper with their head in their hands" },
   { message: "No right or wrong answers. Just be honest with yourself.", solid: "var(--accent)", image: "assets/breathers/breather-2-reflection.png", alt: "A girl sitting alone on a dock, looking out over a lake at sunset" },
   { message: "Noticing these patterns is already a step forward.", solid: "var(--accent)", image: "assets/breathers/breather-3-progress.png", alt: "Two children walking hand in hand up a sunlit path" },
-  { message: "You're not the only one who feels this way — more people relate than you'd think.", solid: "var(--accent)", image: "assets/breathers/breather-4-community.png", alt: "Two kids playing with a ball while a man reads a book under a tree in the park" },
+  { message: "You're not the only one who feels this way. More people relate than you'd think.", solid: "var(--accent)", image: "assets/breathers/breather-4-community.png", alt: "Two kids playing with a ball while a man reads a book under a tree in the park" },
   { message: "Almost through. Take a breath before the last few.", solid: "var(--accent)", image: "assets/breathers/breather-5-almost-there.png", alt: "Two people sitting together on a park bench, talking" },
 ];
 
