@@ -799,9 +799,10 @@ Everything else reviewed (marigold background unification, calculating-screen gl
 
 ### T013 — Full reskin of index.html to the adhd-ui design system (cosmetic tokens only)
 - Owner: frontend-design
-- Status: todo
-- User's instruction (verbatim): "Update the design of this project using the adhd-ui skill. Do not make any structural changes, all changes should be cosmetic only."
-- Context: this app currently uses a bespoke "Marigold" design system (Space Grotesk + IBM Plex Sans fonts, a warm-beige/brown ink scale, a marigold/mint/coral/blue color set — see `:root` in `index.html`). The user wants it restyled to match the `adhd-ui` skill's design system instead: Fredoka + Nunito fonts, a single `#ffd559` accent, neutral charcoal ink, and the exact tokens/radii/shadows/button shapes that skill specifies. This supersedes T012 (that task's narrow #5EC1B2 breather-background request is now handled by the systematic chip-tint approach below).
+- Status: done
+- User's instruction (verbatim): "Update the design of this project using the adhd-ui skill. Do not make any structural changes, all changes should be cosmetic only." Amended in a follow-up message: "apply the quiz-funnel-adhd-ui skill to this project" (same cosmetic-only constraint restated). `quiz-funnel-adhd-ui` was a `.skill` package the user hadn't installed yet — it's now unzipped into `~/.claude/skills/quiz-funnel-adhd-ui/` and loads correctly. It's documented as "an extension of adhd-ui" — same colors/fonts/radii/shadows, so everything below still applies unchanged — plus exactly **one** added rule relevant to a cosmetic-only pass on an existing app (the rest of that skill is about building a funnel's screen *structure* from scratch, which is out of scope per "no structural changes"):
+  - **Every primary CTA button across the whole app must use the same treatment: `background:#ffd559 (--accent); color:#2A2A2A (--ink)` (ink-on-accent) — never the inverse (dark bg / accent text) for a primary CTA, even though adhd-ui's base spec would otherwise allow picking whichever contrasts more per screen.** This app currently has exactly one primary-button style (`.btn.primary`, used for both the email-capture nav button and the final submit button) and it's already ink-on-accent in the existing Marigold system (`background: var(--marigold-300); color: var(--ink-900)`), so this rule should already be satisfied once `.btn.primary` is repointed to `var(--accent)`/`var(--ink)` per the token mapping below — just don't introduce a dark-bg/accent-text variant anywhere as part of this reskin, and confirm in the changelog that no such variant exists.
+- Context: this app currently uses a bespoke "Marigold" design system (Space Grotesk + IBM Plex Sans fonts, a warm-beige/brown ink scale, a marigold/mint/coral/blue color set — see `:root` in `index.html`). The user wants it restyled to match the `adhd-ui` (and its `quiz-funnel-adhd-ui` extension) design system instead: Fredoka + Nunito fonts, a single `#ffd559` accent, neutral charcoal ink, and the exact tokens/radii/shadows/button shapes those skills specify. This supersedes T012 (that task's narrow #5EC1B2 breather-background request is now handled by the systematic chip-tint approach below).
 - **Hard scope boundary — read this before touching anything:**
   - This is a **cosmetic-only token restyle**. Do not change the DOM structure, any class names, the JS logic/state machine/timing/copy/screen flow, or the quiz questions/scoring.
   - Do **not** edit the markup *inside* the companion-character pose functions (`poseIdleSvg`, `poseWavingSvg`, `poseThinkingSvg`, `poseCelebratingSvg`, ~index.html:519 onward) — no path/shape/element changes there. It is fine and expected that editing shared `:root` custom-property *values* (see below) will cosmetically shift some of the character's stroke/pupil/cheek colors, since those SVGs reference the shared tokens via `var(--token, #fallback-hex)` — that's an intended side effect of the reskin, not a structural edit.
@@ -826,5 +827,514 @@ Everything else reviewed (marigold background unification, calculating-screen gl
 - **Do not** introduce a second accent hue anywhere (no blue/purple/green as a *brand* color — chip tints for categorization are fine per the mapping above), and don't add emoji to headings/nav/icons (none currently exist there — confirm, don't add any).
 - **Self-check** (same pattern as prior tasks in this file): `node --check` on the inline `<script>`, then walk every screen via the `?dev=1` screen jumper at 390×844 — gender/age/diagnosis select, each question style, all 3 breathers, calculating, instant-result, full results, email capture, disclaimer — confirm: no console errors, Fredoka/Nunito actually loading and rendering (not falling back to system fonts), no leftover Space Grotesk/IBM Plex Sans references, nothing clips, the character poses still render correctly (just recolored per the token edits above), and the primary CTA button is still the single highest-contrast element on every screen it appears on.
 - If any part of the adhd-ui spec seems to require a structural/layout change to satisfy properly (not just a token value), leave the current structure alone and flag the conflict in the changelog instead of making the structural change — per the user's explicit "no structural changes" instruction.
-- Changelog: (filled in by frontend-design)
-- QA/PO Review: (filled in by qa-product-owner)
+- Changelog:
+  - Read `adhd-ui`'s `SKILL.md` and `references/components.md` in full, plus (per the coordinator's mid-task amendment) `quiz-funnel-adhd-ui`'s `SKILL.md`, before writing any code. Treated both as literal specs (exact hex/px), not inspiration.
+  - **Fonts:** `<link>` in `<head>` now loads exactly `Fredoka:wght@500;600;700` + `Nunito:wght@500;700;800` (index.html:8). Every `font-family: 'Space Grotesk'` → `'Fredoka'` and every `'IBM Plex Sans'` → `'Nunito'` throughout the CSS (grepped afterward — zero remaining references to either old family name). Since only 500/700/800 are loaded for Nunito and the old IBM Plex Sans rules used 400/500/600, every Nunito-tagged rule that previously specified `font-weight: 400` was bumped to `500`, and every `600` was bumped to `700` (nearest loaded weight, preserving each rule's original relative emphasis) — this avoids relying on the browser's implicit nearest-weight font-matching for an unloaded weight. The one exception: `.btn`/`.btn.primary` is explicitly set to `font-weight: 800`, matching the skill's explicit "Button label — Nunito 800" spec and the button snippets in `components.md`, since buttons are named in-scope ("button shapes") in this task's hard scope boundary. All Fredoka-tagged rules already used 600/700, both in the loaded set — no remapping needed there.
+  - **Tokens added to `:root`** (index.html:11-31): the full adhd-ui set verbatim — `--accent`, `--accent-alt-light`, `--accent-alt-deep`, `--ink`, `--ink-soft`, `--ink-faint`, `--on-accent-label`, `--white`, `--card`, `--border`, `--input-border`, `--track`, `--chip-yellow`, `--chip-coral`, `--chip-coral-deep`, `--chip-teal`, `--chip-blue`, `--icon-inactive`.
+  - **Repointed call sites / token values** (all inside `:root` or the named CSS rules, per the task's bullet list):
+    - `body` background: `var(--ink-50)` → `var(--white)` (index.html:106-113).
+    - `--text-strong`/`--text-muted`/`--text-subtle` aliases repointed to `var(--ink)`/`var(--ink-soft)`/`var(--ink-faint)` respectively (names kept, only what they resolve to changed).
+    - `--border-subtle`/`--border-default` aliases repointed to `var(--border)`/`var(--input-border)`.
+    - `.progress-fill`, `.btn.primary` background, `.gauge-outer` conic-gradient's filled stop, `.eyebrow` background, `.option.selected` border-color → all `var(--accent)`.
+    - Also repointed (not explicitly named in the bullet list, but the same "Marigold-system token in UI chrome" pattern, reserving `--marigold-400/500/600/700` exclusively for the character SVGs per the task's own framing that this app currently has some UI-chrome marigold usage that needs separating out): `.option:focus-visible` outline `var(--marigold-500)` → `var(--accent)`; `.option.selected` background `var(--marigold-50)` → `var(--chip-yellow)` (same very-pale-yellow role, now on-token).
+    - `.icon-square`: gradient → flat `var(--accent)` fill. `.icon-square.mint` (used once, in `renderThankYou()`'s confirmation icon): flat `var(--chip-teal)` fill; its inline checkmark `color="#1B4D33"` hardcoded hex was also updated to `color="var(--ink)"` (index.html:918) so the icon stroke follows the token system too.
+    - `.eyebrow` background → `var(--accent)`, text color `var(--marigold-800)` → `var(--on-accent-label)` (index.html:177-189). Note: `.eyebrow` has been dead/unused CSS since T003 removed its only markup usage — updated anyway per the task's explicit instruction, zero visual risk since nothing renders it today.
+    - `.option .check-icon` color and `.question-hint` color: both `var(--marigold-700)` → `var(--ink)` (both sit on light/card backgrounds where plain ink reads cleanly; `--on-accent-label` wasn't applicable since neither sits directly on solid `--accent`).
+    - `--ink-900` value: `#2A211A` → `#2A2A2A` (matches `--ink` exactly). This single value change also fixes the character SVGs' eye/mouth/outline stroke color (`var(--ink-900, #2A211A)`) to the adhd-ui spec's "stroke #2A2A2A" without touching any SVG markup — confirmed via `grep` that the pose-function bodies (`poseIdleSvg`/`poseThinkingSvg`) are byte-identical apart from this shared-token resolution.
+    - `--ink-800` value: `#3A2F26` → `#3A3A3A` (character pupil fill, same "shared token, no markup edit" mechanism).
+    - `--ripe-100` (character cheek color): previously undefined in `:root` — only existed as an inline SVG fallback (`var(--ripe-100, #FDE2D5)`) — added explicitly as `--ripe-100: #FFDCD4`, adhd-ui's `--chip-coral-deep`, which the skill documents by name as "mascot cheeks."
+    - `--ink-100` value: `#F4EFE8` (warm) → `#F5F5F0` (matches `--track` exactly) — covers all 5 of its call sites (progress-track, gauge's unfilled conic stop, metric-track, skeleton-bar, breather-timer-track) in one edit. `--ink-0`/`--surface-page` left as-is (already `#FFFFFF`, matching `--white`), per the task's own note.
+  - **Severity `.band-badge` + `BREATHERS` chip-tint mapping** (my judgment call, as invited by the task):
+    - `.band-badge` (index.html:304-316, currently dead/unused CSS — no markup renders it, same as `.eyebrow`): default (Moderate) → `--chip-yellow`, `.low` (Low/Mild) → `--chip-teal`, `.high` (Strong/Very strong) → `--chip-coral`. Text color `var(--ink)` for all three — matched to the component library's own eyebrow/pill-badge snippet (#15), which puts plain `--ink` text directly on a `--chip-yellow` background; `--on-accent-label` is reserved specifically for text on the *solid* `--accent` fill (see the "Primary highlight card" snippet), not on pale chip tints, so I did not use it here. Rationale for the mapping: teal reads calmest (Low), yellow is the neutral default (Moderate), coral reads warmest/most attention-getting (High) — matches the task's own suggested "calmer tint for Low, warmer for High."
+    - `BREATHERS` (index.html:674-680): rotates `pale` across `--chip-yellow` / `--chip-teal` / `--chip-coral` (one per breather, same three tints as the badge, for a consistent palette across the app). I also changed how `pale`/`solid` are consumed in `renderBreather()` (index.html:791-799): the icon background changed from a two-stop `radial-gradient(pale, solid)` to a **flat** `background: ${b.pale}` fill, and `solid` is now used only by the timer-fill bar, set to `var(--accent)` for all three breathers (matching `.progress-fill`'s color, for a consistent progress-indicator look app-wide). I made this call because (a) adhd-ui explicitly specifies chip/icon-chip fills as flat, no gradients — the same rule the task applies to `.icon-square` — and a two-stop gradient breather icon would be the one remaining un-converted gradient in the file; (b) chip tints are all very pale by design, so using one as a gradient's *outer* stop then reusing that same pale value as the *timer-fill* color would reproduce the exact low-contrast-fill-vs-track bug the file's own comments already flag and warn against (previously solved by using saturated marigold/teal-700 shades, which no longer fit an all-pale chip-tint palette). Decoupling "background chip tint" from "timer-fill color" and giving the fill the same `--accent` used by `.progress-fill` elsewhere solves both problems at once. Flagging this explicitly since it's a change to a JS template-literal's inline `style` value (not purely a `:root` value edit) — no DOM structure, class name, timing, or copy was touched; only which color shows up in that one inline style attribute.
+    - `CALC_METRICS` (index.html:830-845, the calculating-screen metric bars) was **intentionally left untouched** — it isn't named as a call site anywhere in T013's bullet list, and its colors (`--marigold-700/800`, `--teal-700`) are explicitly preserved by this task's "do not touch `--marigold-400/500/600/700` values" instruction and by `--teal-700` not being named for change either. Rather than guess at an unspecified chip-tint substitution (which risks reopening the contrast bug the file's own comments describe), I left it fully as-is and left a note in the code (index.html:830-834) explaining the decision for whoever revisits it next.
+  - **Radius:** `.btn`/`.btn.primary` border-radius changed from `var(--radius-pill)` (999px) to `var(--radius-lg)` (16px, already defined in the file's own radius scale — reused rather than adding a new token) — squarely in the skill's 14–18px button range. Confirmed via screenshot this still looks correct at the existing 48px height (rounded-rectangle button, not a pill, not a square). Progress/timer/metric/skeleton bars and `.band-badge` were left pill-shaped, matching the task's own default guidance.
+  - **Shadows:** grepped the whole file for `box-shadow` — zero matches before or after this change (the one comment mentioning "shadow" at index.html:119 is dead prose about a mockup-only `.phone` frame that was never implemented, not real CSS). Nothing to change; adhd-ui's border-not-shadow default was already the de facto behavior here.
+  - **quiz-funnel-adhd-ui amendment (ink-on-accent CTA rule):** grepped the whole file for every `<button`/`class="btn` occurrence. Confirmed there are exactly two primary CTAs, both `class="btn primary"` (index.html:893 — "Get my free full results"; index.html:909 — "Send my results"), both governed by the single shared `.btn.primary` rule, now `background: var(--accent); color: var(--ink)` — ink-on-accent, per the rule, on every screen it appears on. No other button-like element in the app (`.option` answer rows, the plain icon `.back` button, or the temporary `?dev=1`-only dev-panel buttons, which are explicitly pre-launch scaffolding and out of scope) uses button-primary styling or an inverse dark-bg/accent-text treatment. No new button variant was introduced anywhere. This satisfies the amendment with no additional code change beyond what T013's own token repoint already did.
+  - **Confirmed untouched, as required:** DOM structure, class names, JS logic/state machine/timing/copy, quiz questions/scoring, and all markup inside `poseIdleSvg`/`poseThinkingSvg` (this app currently only has these two pose functions in use — `poseWavingSvg`/`poseCelebratingSvg` referenced in older task changelogs no longer exist in the current codebase, confirmed via grep — so there was nothing to check there). Second accent hue: none introduced (`--chip-*` values are used strictly as categorization tints, never as a CTA/brand color). No emoji added anywhere.
+  - **Known unused/dead tokens, left defined rather than deleted** (cosmetic/minimal-diff scope — not asked to clean these up): `--ink-50`, `--ink-200`, `--ink-300` (former border/background scale, now fully repointed away from at every call site), `--mint`/`--mint-ink`/`--coral`/`--coral-ink`/`--blue`/`--blue-ink` (former severity colors, replaced by the chip-tint mapping above), `--teal-300`/`--teal-500` (no longer referenced after the `BREATHERS` chip-tint conversion; `--teal-700` is still unused by anything I touched but is preserved because `CALC_METRICS` still reads it). All flagged here in case a future cleanup task wants to remove them.
+  - **Self-check:** `node --check` on the extracted inline `<script>` — parses cleanly (exit 0). Started a local `python3 -m http.server`, temp-installed `puppeteer-core` in the scratchpad (not the project — no trace in this repo) against the system's installed Google Chrome, and at a 390×844 viewport with `?dev=1` walked every screen: genderSelect, ageSelect, diagnosisStatus, question (both a plain question and the "How hard is it for you to relax?" hint-variant question), an option-selected state, all 3 breathers, calculating, instantResult, emailCapture, thankYou. For each: captured a screenshot, confirmed computed `font-family` resolves to `Fredoka, sans-serif` / `Nunito, sans-serif` (not falling back to a system font), confirmed `document.body` background is pure white, confirmed the primary CTA button's computed background/color/border-radius are `rgb(255, 213, 89)` / `rgb(42, 42, 42)` / `16px` exactly, confirmed the 3 breather icons render as flat fills (`background-image: none`) in the correct chip-yellow/chip-teal/chip-coral colors with no overflow/clipping, and confirmed the character poses still render correctly (same shapes, now neutral-ink-stroked/coral-cheeked). Zero `pageerror` events across the whole walk; the only console entry anywhere was a pre-existing, unrelated `favicon.ico` 404 (confirmed via a dedicated response-listener check) — the same baseline noise prior tasks in this file have already documented, not caused by this change.
+  - No backend/API contract involved — pure client-side CSS/token/markup-value change, no assumptions needed for another agent.
+- QA/PO Review:
+  ### QA/PO Review — T013 — PASS
+  **Correctness:**
+  - Diffed `index.html` against the last commit in full (`git diff -- index.html`, 249 changed lines). Every changed line is a `:root` custom-property value/comment, a `font-family`/`font-weight` value, a background/color/border-radius value, or (as explicitly flagged in the changelog) the `BREATHERS` array's `pale`/`solid` inline-style values and the `renderThankYou()` checkmark `color` attribute. No DOM elements added/removed/reordered, no class names changed, no JS state machine/timing/copy/scoring logic touched. Confirmed no incremental commits exist to compare against besides the working-tree diff, which was reviewed line-by-line.
+  - `poseIdleSvg`/`poseThinkingSvg` (the only two pose functions that exist in this codebase — confirmed via grep that `poseWavingSvg`/`poseCelebratingSvg` are not present, matching the changelog's claim) are byte-identical in the diff — zero `+`/`-` lines inside either function body. Their `var(--ink-900, #2A211A)` / `var(--ink-800, #3A2F26)` / `var(--ripe-100, #FDE2D5)` fallback hexes are untouched (correctly left alone per the "don't edit SVG markup" scope boundary) but are dead code paths since all three custom properties are now defined in `:root` (`#2A2A2A` / `#3A3A3A` / `#FFDCD4`), so the actually-rendered colors already match spec — confirmed visually in the breather screenshot (neutral charcoal stroke, coral-tinted cheeks).
+  - Verified every color token against `adhd-ui`'s `SKILL.md` table verbatim: `--accent #ffd559`, `--ink #2A2A2A`, `--ink-soft #6b6b6b`, `--ink-faint #A6A6A0`, `--on-accent-label #6b5a12`, `--white #ffffff`, `--card #FCFCFA`, `--border #F2F2ED`, `--input-border #EFEFE9`, `--track #F5F5F0`, `--chip-yellow #FFF3C4`, `--chip-coral #FFE9E5`, `--chip-coral-deep #FFDCD4`, `--chip-teal #E9F5F1`, `--chip-blue #DEE7FF`, `--icon-inactive #CFCFC7` — all exact, no approximated hex. `grep -c "Space Grotesk\|IBM Plex Sans" index.html` → 0. Google Fonts `<link>` loads exactly `Fredoka:wght@500;600;700` + `Nunito:wght@500;700;800`, matching the skill's load URL verbatim.
+  - Button radius: `.btn`/`.btn.primary` now `var(--radius-lg)` = 16px, inside the skill's 14–18px button range; confirmed via computed-style check in a live headless-Chrome run (`borderRadius: "16px"`).
+  - Ran `node --check` on the extracted inline `<script>` — exits 0, no syntax errors.
+  - Ran a live walkthrough: `python3 -m http.server` + puppeteer-core (installed only in the QA scratchpad, not the repo) against system Google Chrome, 390×844 viewport, `?dev=1`, walked all 9 `devJumpTo` screens (genderSelect, ageSelect, diagnosisStatus, question, breather, calculating, instantResult, emailCapture, thankYou) plus a live option-select click. For every screen: `document.body` computed background is `rgb(255,255,255)` (pure white, no warm cream leak), `scrollWidth === clientWidth === 390` (no horizontal clipping/overflow on any screen), zero `pageerror` events, the only console/network entry was the pre-existing unrelated `favicon.ico` 404 (same baseline noise prior QA reviews in this file already documented). On `instantResult`/`emailCapture` the primary CTA's computed style is exactly `background-color: rgb(255,213,89)` / `color: rgb(42,42,42)` / `border-radius: 16px` — i.e. `#ffd559`/`#2A2A2A` bit-exact, matching the ink-on-accent rule. Screenshots confirm the 3 breather icons render as flat chip-tint fills (no gradient), the confirmation checkmark chip is flat `--chip-teal` with an ink check, and the character poses/cheeks/eyes render correctly with the new neutral-ink/coral tones — no clipping or regression anywhere.
+  - Grepped for `box-shadow`: zero matches, confirming the changelog's "nothing to change" claim.
+  - Grepped for the old severity/mint/coral/blue tokens (`var(--mint`, `var(--coral`, `var(--blue)`, `var(--marigold-100`, `var(--marigold-800`) as live call sites: only `CALC_METRICS`'s `var(--marigold-800)` remains (an explicitly-flagged, out-of-scope, pre-existing call site left untouched per the task's own "don't touch marigold-400/500/600/700" instruction) — everything else that used to read the old dead palette has been repointed, and the old tokens are left defined-but-unused as disclosed.
+  - **Minor nit, not blocking:** the reskin introduced new `font-weight` values on a few rules that previously had *no* explicit weight at all (`.option` → 700, `.microcopy` → 700, `.disclaimer` → 500, `.trust-row span` → 500, `input` → 700) — this goes a step beyond the changelog's stated "400→500, 600→700" remapping rule (which only covers rules that already had an explicit weight) and isn't individually itemized. The result is a small internal inconsistency: `.microcopy`, `.disclaimer`, and `.trust-row span` all share the same `--ink-faint`/`--text-subtle` "caption" role and near-identical size, but ended up on two different weights (700 vs 500 vs 500), where adhd-ui's own type scale defines a single "Caption / meta — Nunito 700" rule for exactly this role. Also worth a look: `.option` answer-row text is now bold (700) where it previously rendered at the browser default weight — a real, visible (if minor) design decision not explicitly called for by the task's font-mapping instructions. None of this breaks contrast, layout, or any hard rule (one accent, one CTA treatment, no banned tones, no structural change) — flagging as a nice-to-have follow-up for whoever next touches typography, not a reason to send this back.
+  **User/product perspective:**
+  - The reskin reads as a coherent, consistent visual system across every screen walked — one yellow accent, one CTA treatment, neutral charcoal text, no leftover warm/cream tones, no jarring inconsistency between screens.
+  - No dead ends, no missing loading/error states introduced — this task didn't touch any of that, correctly, since it was scoped to cosmetic tokens only.
+  - Nothing over-built: no new components, no structural rework, no scope creep into the quiz-funnel-adhd-ui skill's from-scratch screen-structure guidance (correctly recognized as out of scope and explicitly flagged rather than acted on, e.g. the calculating screen intentionally stayed on its existing white background rather than being restructured to that skill's "full ink background" pattern, which is a *structural* change this task correctly declined to make).
+  **Contract mismatches:** n/a — pure client-side CSS/token change, no backend/API involved, nothing for another agent's assumptions to conflict with.
+  **Verdict:** ready to ship — cosmetic-only scope was honored throughout (verified via full diff, not just the changelog's claims), colors/fonts/radii match the adhd-ui spec bit-exact, exactly one ink-on-accent CTA treatment exists app-wide with no inverse variant, no second accent hue was introduced, and the live walkthrough shows no console errors, no clipping, and identical functional behavior to before.
+
+### T014 — Split index.html's inline JS into ES modules (pure code-organization refactor)
+- Owner: frontend-design
+- Status: done
+- User's instruction (verbatim): "Split the JS inside a single static index.html file (vanilla JS, no framework, no build step) into separate ES modules — one file per screen plus shared state/components — without changing any behavior, output, styling, deploy config, or the Netlify function."
+- This is **not** a cosmetic/design task like T001–T013 — this is a structural code-organization refactor, explicitly requested. The constraint here is the inverse of those tasks: the file layout changes, but runtime behavior, visual output, styling, and every external contract (deploy config, the Netlify function, beehiiv integration) must stay byte-for-byte equivalent in effect.
+- Read the actual current `index.html` yourself (post-T013 reskin) before starting — do not assume screen names, count, quiz flow, or function/variable names from any prior task's description in this file; base the split strictly on what's actually there.
+- **Structure requirements (verbatim from the user):**
+  - Create `js/state.js`: the state machine only — current screen tracking, quiz answers, transition logic. No rendering code.
+  - Create `js/screens/` with one file per screen (e.g. `intro.js`, `question.js`, `results.js`), each exporting a single function that takes state and returns/renders the screen's markup, matching exactly what that screen currently renders.
+  - Create `js/components/` for any UI fragment reused across 2+ screens (e.g. progress bar, button) — extract only genuinely shared markup, not screen-specific code.
+  - Create `js/main.js`: imports `state.js` and `screens/*`, wires up event listeners, mounts the initial screen into the existing container element. This becomes the single entry point.
+  - Update `index.html` to load `js/main.js` via `<script type="module" src="js/main.js"></script>`, removing the old inline `<script>` block. Keep all `<head>` content (CDN links, fonts, meta tags), all CSS, and all HTML structure/container elements exactly as-is.
+  - Do NOT introduce a bundler, npm build step, JSX, TypeScript, or any new runtime dependency.
+  - Do NOT add, remove, or change any URL routing, History API usage, or navigation model — screen transitions stay purely in-memory/state-driven, exactly as they behave today.
+  - Do NOT modify `netlify/functions/subscribe.js`, `netlify.toml`, `package.json` scripts, or the beehiiv integration in any way.
+  - Do NOT change any visual output, animation timing, quiz question logic, copy text, or styling — this is a pure code-organization refactor. If a change to behavior seems necessary to make the split work, stop and flag it instead of making it silently.
+  - Preserve all existing Lucide icon initialization calls and Google Fonts loading exactly as currently triggered.
+  - Note: `<script type="module">` is deferred by default and ES modules are same-origin-fetched — confirm this still works correctly under the project's actual local-dev setup (`live-server` + `netlify-cli`, no transpilation, see `scripts/dev-start.sh`) and under a plain `file://` open if that's ever used; flag it if the module split requires the page to be served over http(s) rather than opened directly as a file, since that would be a (minor, dev-workflow-only, not visual/behavioral) side effect worth surfacing rather than silently assuming is fine.
+- **Deliverables — the user wants these reported back, not just implemented.** Produce, in your final changelog entry:
+  1. Final file/folder tree (additions only, showing what's new vs. what stays at root).
+  2. Full contents of `js/main.js`.
+  3. Full contents of one example screen module and one example shared component module, showing their import relationship.
+  4. The exact diff/replacement for `index.html`'s `<script>` section.
+  5. A short list of anything from the original inline script that could NOT be cleanly separated (e.g. due to shared closures/global state) and how it was handled — flag these explicitly rather than silently restructuring around them.
+- **Self-check:** run the app via the project's actual dev command (`npm run dev`, i.e. `live-server` + `netlify-cli` per `scripts/dev-start.sh`) and walk every screen via the existing `?dev=1` screen jumper at 390×844 — confirm pixel-identical rendering to the pre-refactor version, no console errors (module-loading errors, CORS/MIME-type issues, undefined-import errors), all animations/transitions/timing unchanged, and the email-capture flow still POSTs correctly to the (untouched) Netlify function.
+- Changelog:
+
+  **Summary:** Read the actual post-T013 `index.html` in full (1180 lines) before touching anything — did not rely on any prior task's description of screen names/structure. Split the single inline `<script>` block into ES modules under `js/`, per the structure requirements, with zero intended change to runtime behavior, visual output, timing, or the Netlify/beehiiv contract. `netlify/functions/subscribe.js`, `netlify.toml`, and `package.json` scripts were not touched (verified via `git status`/diff — untouched). Only `index.html` (script section) and `TEAM_WORKFLOW.md` (this entry) were modified; everything else is new files under `js/`.
+
+  **1. Final file tree (additions only):**
+  ```
+  adhdquiz/
+  ├── index.html                      (modified: inline <script> removed, replaced with a single module tag; head/CSS/HTML structure untouched)
+  ├── js/                             (all new)
+  │   ├── main.js                     — single entry point
+  │   ├── state.js                    — state machine: screen/answers/data + setters + scoring, no rendering
+  │   ├── utils.js                    — prefersReducedMotion()/hydrateIcons() (see item 5, "couldn't be cleanly separated")
+  │   ├── components/
+  │   │   ├── topbar.js               — topbarHtml(), shared by almost every screen
+  │   │   ├── progress.js             — progressBlockHtml(), shared by question + breather
+  │   │   └── companion.js            — poseIdleSvg()/poseThinkingSvg(), shared by breather + calculating
+  │   └── screens/
+  │       ├── genderSelect.js
+  │       ├── ageSelect.js
+  │       ├── diagnosisStatus.js
+  │       ├── question.js
+  │       ├── breather.js             — also owns the BREATHERS data array + animateBreatherTimer()
+  │       ├── calculating.js          — also owns CALC_METRICS + calcMetricTargets + animateCalculatingScreen()
+  │       ├── instantResult.js        — also owns animateResultGauge()
+  │       ├── emailCapture.js
+  │       └── thankYou.js
+  ├── netlify/functions/subscribe.js  (untouched)
+  ├── netlify.toml                    (untouched)
+  └── package.json                   (untouched — scripts/devDependencies identical)
+  ```
+  Note: `js/utils.js` wasn't one of the 4 named locations (state.js/screens/components/main.js) in T014's structure requirements. It holds exactly 2 one-line helpers (`prefersReducedMotion()`, `hydrateIcons()`) used by main.js and 3 screen modules' animation functions. They aren't markup (so `js/components/` — described as "UI fragment reused across 2+ screens" — was the wrong fit) and aren't state (so `js/state.js` was also the wrong fit). Flagging this as the one deliberate small addition beyond the literal file list, rather than silently forcing them into one of the other buckets or duplicating them in 4 places.
+
+  **2. Full contents of `js/main.js`:**
+  ```js
+  /* ============================================================
+     ENTRY POINT (T014 split)
+     Imports state, components, and every screen; owns the central
+     render()/screenBodyHtml() dispatcher, all DOM event handlers, and
+     mounts the initial screen. Loaded via
+     <script type="module" src="js/main.js"></script> in index.html.
+
+     IMPORTANT — inline `onclick="..."` handlers: the screen/component
+     markup (unchanged from before this refactor) calls functions like
+     `onclick="selectGender(0)"`, `onclick="goBack()"`,
+     `onclick="submitEmail(event)"`, and the dev-panel buttons call
+     `onclick="devJumpTo('...')"`. Because ES modules do NOT put their
+     top-level function declarations on `window` (unlike the old classic
+     <script> block, where every top-level function was implicitly
+     global), these handlers would otherwise be undefined at click time.
+     Rather than rewrite the markup to use addEventListener (which would
+     change the rendered HTML/attributes and risk behavior drift — out
+     of scope for a "pure code-organization refactor"), each handler is
+     explicitly assigned onto `window` at the bottom of this file. This
+     is the one piece of "shared global state" this split couldn't
+     avoid — see T014's changelog note for the full explanation.
+     ============================================================ */
+
+  import * as State from './state.js';
+  import { topbarHtml } from './components/topbar.js';
+  import { progressBlockHtml } from './components/progress.js';
+  import { renderGenderSelect } from './screens/genderSelect.js';
+  import { renderAgeSelect } from './screens/ageSelect.js';
+  import { renderDiagnosisStatus } from './screens/diagnosisStatus.js';
+  import { renderBreather, animateBreatherTimer, BREATHERS } from './screens/breather.js';
+  import { renderQuestion } from './screens/question.js';
+  import { renderCalculating, animateCalculatingScreen } from './screens/calculating.js';
+  import { renderInstantResult, animateResultGauge } from './screens/instantResult.js';
+  import { renderEmailCapture } from './screens/emailCapture.js';
+  import { renderThankYou } from './screens/thankYou.js';
+  import { prefersReducedMotion, hydrateIcons } from './utils.js';
+
+  function screenBodyHtml() {
+    if (State.screen === 'genderSelect') return renderGenderSelect(State);
+    if (State.screen === 'ageSelect') return renderAgeSelect(State);
+    if (State.screen === 'diagnosisStatus') return renderDiagnosisStatus(State);
+    if (State.screen === 'breather') return renderBreather(State);
+    if (State.screen === 'question') return renderQuestion(State);
+    if (State.screen === 'calculating') return renderCalculating();
+    if (State.screen === 'instantResult') return renderInstantResult(State);
+    if (State.screen === 'emailCapture') return renderEmailCapture();
+    if (State.screen === 'thankYou') return renderThankYou(State);
+  }
+
+  function render() {
+    const showTitle = (State.screen === 'genderSelect' || State.screen === 'question' || State.screen === 'ageSelect' || State.screen === 'diagnosisStatus' || State.screen === 'breather');
+    const html = topbarHtml(State, showTitle) + progressBlockHtml(State) + screenBodyHtml();
+    const apply = () => { document.getElementById('card').innerHTML = html; hydrateIcons(); };
+    if (document.startViewTransition && !prefersReducedMotion()) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
+    }
+    if (State.screen === 'instantResult') {
+      const percent = Math.round((State.partAScore() / 24) * 100);
+      setTimeout(() => animateResultGauge(percent), 200);
+    }
+  }
+
+  function selectGender(i) {
+    State.setSelectedGender(i);
+    document.querySelectorAll('#card .option').forEach((btn, idx) => btn.classList.toggle('selected', idx === i));
+    setTimeout(() => { State.setScreen('ageSelect'); render(); }, 220);
+  }
+  function selectAge(i) {
+    State.setSelectedAge(i);
+    document.querySelectorAll('#card .option').forEach((btn, idx) => btn.classList.toggle('selected', idx === i));
+    setTimeout(() => { State.setScreen('diagnosisStatus'); render(); }, 220);
+  }
+  function selectDiagnosis(i) {
+    State.setSelectedDiagnosis(i);
+    document.querySelectorAll('#card .option').forEach((btn, idx) => btn.classList.toggle('selected', idx === i));
+    setTimeout(() => { State.setScreen('question'); State.setQIndex(0); render(); }, 220);
+  }
+  function selectAnswer(i) {
+    State.setAnswer(State.qIndex, i);
+    document.querySelectorAll('#card .option').forEach((btn, idx) => btn.classList.toggle('selected', idx === i));
+    setTimeout(() => {
+      const answeredCount = State.qIndex + 1;
+      if (State.qIndex >= State.QUESTIONS.length - 1) {
+        State.setScreen('calculating');
+        render();
+        setTimeout(() => animateCalculatingScreen(State), 60);
+        setTimeout(() => {
+          if (State.screen === 'calculating') { State.setScreen('instantResult'); render(); }
+        }, 8000);
+        return;
+      }
+      if (answeredCount % 4 === 0) {
+        State.setBreatherIndex((answeredCount / 4 - 1) % BREATHERS.length);
+        State.setScreen('breather');
+        render();
+        setTimeout(() => animateBreatherTimer(), 60);
+        setTimeout(() => {
+          if (State.screen === 'breather') { State.setQIndex(State.qIndex + 1); State.setScreen('question'); render(); }
+        }, 4000);
+      } else {
+        State.setQIndex(State.qIndex + 1);
+        render();
+      }
+    }, 220);
+  }
+  function goBack() {
+    if (State.screen === 'ageSelect') { State.setScreen('genderSelect'); render(); }
+    else if (State.screen === 'diagnosisStatus') { State.setScreen('ageSelect'); render(); }
+    else if (State.screen === 'question') {
+      if (State.qIndex > 0) { State.setQIndex(State.qIndex - 1); render(); }
+      else { State.setScreen('diagnosisStatus'); render(); }
+    } else if (State.screen === 'instantResult') { State.setScreen('question'); State.setQIndex(State.QUESTIONS.length - 1); render(); }
+    else if (State.screen === 'emailCapture') { State.setScreen('instantResult'); render(); }
+  }
+  function goEmailCapture() { State.setScreen('emailCapture'); render(); }
+
+  async function submitEmail(e) {
+    e.preventDefault();
+    const email = document.getElementById('emailInput').value;
+    const s = State.fullScoring();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      console.log('[subscribe] sending request for', email);
+      const res = await fetch('/.netlify/functions/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, subtype: s.subtype, score: s.totalScore,
+          gender: State.selectedGender !== null ? State.GENDER_OPTIONS[State.selectedGender] : null,
+          ageRange: State.selectedAge !== null ? State.AGE_RANGES[State.selectedAge] : null,
+          diagnosisStatus: State.selectedDiagnosis !== null ? State.DIAGNOSIS_OPTIONS[State.selectedDiagnosis] : null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error('[subscribe] failed:', res.status, data);
+        throw new Error('Subscription request failed');
+      }
+      console.log(data.mock
+        ? '[subscribe] ✅ mock success — beehiiv not connected yet, function logic checks out'
+        : '[subscribe] ✅ confirmed sent to beehiiv');
+      State.setScreen('thankYou');
+      render();
+    } catch (err) {
+      console.error('[subscribe] error:', err);
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      alert("Something didn't go through. Mind trying again?");
+    }
+  }
+
+  /* ============================================================
+     DEV-ONLY SCREEN JUMPER — temporary, delete this whole block
+     before launch.
+     ============================================================ */
+  function initDevPanel() {
+    const panel = document.getElementById('devPanel');
+    const screens = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'emailCapture', 'thankYou'];
+    panel.style.display = 'flex';
+    panel.innerHTML = screens.map(s =>
+      `<button onclick="devJumpTo('${s}')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;">${s}</button>`
+    ).join('');
+  }
+  function devJumpTo(targetScreen) {
+    State.setScreen(targetScreen);
+    if (targetScreen === 'question') State.setQIndex(0);
+    if (targetScreen === 'breather') State.setBreatherIndex(0);
+    render();
+  }
+
+  // Expose to window for the inline onclick="" attributes in the rendered
+  // markup (see the file-level comment above) — the one spot this split
+  // needed a deliberate global side effect.
+  window.selectGender = selectGender;
+  window.selectAge = selectAge;
+  window.selectDiagnosis = selectDiagnosis;
+  window.selectAnswer = selectAnswer;
+  window.goBack = goBack;
+  window.goEmailCapture = goEmailCapture;
+  window.submitEmail = submitEmail;
+  window.devJumpTo = devJumpTo;
+
+  render();
+  initDevPanel();
+  ```
+
+  **3. Full contents of one example screen module + one shared component module, showing their import relationship** (chose `js/screens/breather.js` since it's the clearest example — it imports a shared component, imports a shared utility, AND owns screen-local data/animation, so it demonstrates all three module kinds at once):
+
+  `js/components/companion.js` (shared component — trimmed here to the export signatures + first pose; both `poseIdleSvg`/`poseThinkingSvg` bodies are unchanged copy-paste from the original inline script, byte-for-byte, full SVG markup preserved):
+  ```js
+  /* ============================================================
+     Shared component: companion-character pose SVGs.
+     Genuinely reused across 2+ screens — poseIdleSvg is used on 2 of the
+     3 breather screens (js/screens/breather.js), and poseThinkingSvg is
+     used on the 3rd breather screen AND on the calculating screen
+     (js/screens/calculating.js) — so this lives in js/components/
+     rather than inside either screen file.
+
+     Inline, from the Companion.dc.html asset export plus new pose
+     variants authored for T007. Each pose is a self-contained
+     0-0-200-200 viewBox drawing; sized per call-site. Markup is
+     byte-for-byte identical to the pre-T014 inline <script> — only the
+     file location changed.
+     ============================================================ */
+
+  export function poseThinkingSvg(size) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 200 200">
+      ... (full original SVG markup, unchanged) ...
+    </svg>`;
+  }
+  export function poseIdleSvg(size) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 200 200">
+      ... (full original SVG markup, unchanged) ...
+    </svg>`;
+  }
+  ```
+  (Full, untrimmed file is at `js/components/companion.js` — omitted the ~90 lines of `<path>`/`<circle>` coordinates here for readability since they're pasted verbatim from the pre-refactor file with zero changes.)
+
+  `js/screens/breather.js` (example screen module — full file, importing the component above):
+  ```js
+  /* ============================================================
+     Screen: breather
+     ============================================================ */
+
+  import { poseIdleSvg, poseThinkingSvg } from '../components/companion.js';
+  import { prefersReducedMotion } from '../utils.js';
+
+  // Palette (T013 adhd-ui reskin): each breather's icon background is now a
+  // flat adhd-ui chip tint (`pale`) — chip/icon squares are flat single-tint
+  // fills, no gradients, per the skill — rotating across chip-yellow /
+  // chip-teal / chip-coral so adjacent breathers stay visually distinct
+  // ("different item, different tint"). `solid` is kept as a separate field
+  // (still consumed only by the thin timer-fill bar below, decoupled from
+  // the icon background) and set to the single system accent color for all
+  // three, matching this app's other progress indicator (`.progress-fill`)
+  // and giving the fill a consistent, always-legible look regardless of
+  // which chip tint sits behind the character.
+  export const BREATHERS = [
+    { message: "It's okay if some of these feel familiar. That's kind of the point.", pale: "var(--chip-yellow)", solid: "var(--accent)", pose: poseIdleSvg },
+    { message: "No right or wrong answers. Just be honest with yourself.", pale: "var(--chip-teal)", solid: "var(--accent)", pose: poseThinkingSvg },
+    { message: "Noticing these patterns is already a step forward.", pale: "var(--chip-coral)", solid: "var(--accent)", pose: poseIdleSvg },
+  ];
+
+  export function renderBreather(state) {
+    const b = BREATHERS[state.breatherIndex];
+    return `
+      <div class="fade-in breather">
+        <div class="breather-icon" style="background: ${b.pale};">
+          ${b.pose(176)}
+        </div>
+        <p class="breather-text">${b.message}</p>
+        <div class="breather-timer-track"><div class="breather-timer-fill" id="breatherTimerFill" style="background:${b.solid};"></div></div>
+      </div>
+    `;
+  }
+
+  export function animateBreatherTimer() {
+    const fill = document.getElementById('breatherTimerFill');
+    if (!fill) return;
+    if (prefersReducedMotion()) { fill.style.width = '100%'; return; }
+    requestAnimationFrame(() => { fill.style.transition = 'width 4s linear'; fill.style.width = '100%'; });
+  }
+  ```
+  Import relationship: `js/screens/breather.js` imports `poseIdleSvg`/`poseThinkingSvg` from `../components/companion.js` (shared with `js/screens/calculating.js`, which also imports `poseThinkingSvg` from the same file) and `prefersReducedMotion` from `../utils.js`. `js/main.js` in turn imports `renderBreather`, `animateBreatherTimer`, and `BREATHERS` from `./screens/breather.js` (the `BREATHERS.length` is needed in main.js's `selectAnswer()` to compute the next breather index).
+
+  **4. Exact `index.html` `<script>`-section diff:**
+  - Removed: the entire inline `<script>...</script>` block that used to run from just after `<div id="devPanel" ...></div>` through just before `</body>`, containing all quiz data, render functions, animation functions, event handlers, and the dev panel (previously 640 lines, old index.html:538–1177).
+  - Added, in that exact same position: a single line, `<script type="module" src="js/main.js"></script>`.
+  - Nothing else in `index.html` changed — `<head>` (meta tags, Google Fonts links, the `unpkg.com/lucide` CDN `<script>`, and the full `<style>` block) and all HTML structure (`.stage`, `#card`, the dev-panel `<div>` and its explanatory HTML comment) are byte-identical to the pre-T014 file. Confirmed via direct read of both the CSS/head and the final markup after the edit.
+  - Before (old index.html:536-538, condensed):
+    ```html
+    <div id="devPanel" style="display:none; ..."></div>
+
+    <script>
+    /* ---------------- QUESTION DATA (18-item set) ---------------- */
+    const QUESTIONS = [ ... 640 lines of quiz data + render/animation/event-handler functions ... ];
+    render();
+    initDevPanel();
+    </script>
+
+    </body>
+    </html>
+    ```
+  - After (new index.html:531-541):
+    ```html
+    <div id="devPanel" style="display:none; ..."></div>
+
+    <script type="module" src="js/main.js"></script>
+
+    </body>
+    </html>
+    ```
+
+  **5. Things that could NOT be cleanly separated (shared closures/globals), and how each was handled:**
+  1. **Inline `onclick="..."` handlers need global functions.** The rendered markup (unchanged) calls `onclick="selectGender(0)"`, `onclick="goBack()"`, `onclick="submitEmail(event)"`, `onclick="devJumpTo('...')"`, etc. In the old classic `<script>`, every top-level `function` declaration was automatically a `window` global, so this "just worked." ES modules do NOT do this — module-scope functions are private to the module. **Handled by:** explicitly assigning each handler (`selectGender`, `selectAge`, `selectDiagnosis`, `selectAnswer`, `goBack`, `goEmailCapture`, `submitEmail`, `devJumpTo`) onto `window` at the bottom of `js/main.js`. Considered switching to `addEventListener`-based wiring instead, but that would change the rendered HTML (removing `onclick` attributes) and risk subtle behavior drift — out of scope for a "pure code-organization refactor" per the task's own instruction to flag rather than silently restructure. Flagging this explicitly as requested.
+  2. **Shared mutable app state (`screen`, `qIndex`, `breatherIndex`, `selectedGender/Age/Diagnosis`, `answers`) read by almost every module.** These used to be plain top-level `let`s in one script, freely read and reassigned from anywhere. **Handled by:** `js/state.js` exports them as live ES-module bindings (any importer's read always reflects the current value — this is standard ES module behavior, not a workaround) but only exposes `setScreen()`/`setQIndex()`/`setBreatherIndex()`/`setSelectedGender()`/`setSelectedAge()`/`setSelectedDiagnosis()`/`setAnswer()` for writes, since other modules cannot reassign an imported binding directly. `js/main.js` imports the whole module as a namespace (`import * as State`) and passes it into each screen's render function as its `state` parameter, and into `animateCalculatingScreen(state)` (which needs to keep checking `state.screen` live inside its `setInterval`/`setTimeout` callbacks to know if the user has navigated away — this only works correctly because the namespace import is a live reference, not a one-time snapshot).
+  3. **Two screens (`instantResult`/`calculating`) have animation functions (`animateResultGauge`, `animateCalculatingScreen`) invoked from `js/main.js`'s `render()`/`selectAnswer()`, but which internally manipulate DOM nodes owned by that screen's own markup.** These weren't split into "screen" vs. "main" — kept together inside each screen's own file (`js/screens/instantResult.js`, `js/screens/calculating.js`) and exported alongside the render function, since they're tightly coupled to that screen's specific element IDs (`#gaugeOuter`, `#percentNum`, `#metricFill0..5`, `#calcCaption`) and would just be an awkward re-import back into the screen file if placed in `main.js` instead.
+  4. **`calcMetricTargets` (randomized illustrative bar targets) is set by `renderCalculating()` and read by `animateCalculatingScreen()`.** Kept as a private, non-exported module-scoped variable inside `js/screens/calculating.js` — genuinely screen-local state that nothing outside that file ever needs, so no export/global was necessary here at all (this one *did* separate cleanly).
+  5. **`js/utils.js` (not one of the 4 named structure buckets)** — see file-tree note in item 1 above; flagged there rather than silently forcing `prefersReducedMotion()`/`hydrateIcons()` into `state.js` or `components/`.
+
+  **Self-check / testing performed:**
+  - `node --check` on all 15 new `js/**/*.js` files — all parse cleanly.
+  - Ran the project's real dev command, `npm run dev` (live-server on :8080 + netlify-cli on :8888 per `scripts/dev-start.sh`, proxying `/.netlify/functions/*`) — confirmed `index.html`, `js/main.js`, and every nested module (e.g. `js/screens/question.js`, `js/components/companion.js`) are served over `http://localhost:8080` with `Content-Type: text/javascript`, and load with zero MIME-type/module errors.
+  - Used a temp `npm install --no-save puppeteer-core` (against the system's installed Google Chrome; uninstalled afterward — `git status`/`git diff` on `package.json` and `package-lock.json` confirm zero trace left, same pattern as prior tasks' QA-verified approach) driving headless Chrome at 390×844:
+    - Walked all 9 screens via `?dev=1` + `devJumpTo()` (`genderSelect`, `ageSelect`, `diagnosisStatus`, `question`, `breather`, `calculating`, `instantResult`, `emailCapture`, `thankYou`) — zero console errors, zero page errors on every screen (the only console entries seen anywhere in testing were the pre-existing, unrelated `unpkg.com/lucide` CDN 302 — blocked by this sandbox's network restrictions, not a code issue — and a `favicon.ico` 404, both already documented as pre-existing/unrelated by prior tasks' QA passes).
+    - Confirmed the dev-panel's `devJumpTo()` never triggered the screen-specific animations (gauge count-up, breather timer fill, calculating bars/caption) — verified this is **pre-existing behavior**, not a regression: the original `devJumpTo()` only ever called `render()`, never the `animate*` functions, in the pre-refactor code too.
+    - Drove the **real, natural user flow** end-to-end with real clicks (no dev jumper): gender → age → diagnosis → all 18 questions (breathers correctly triggered after questions 4/8/12/16, exactly matching `answeredCount % 4 === 0`) → calculating → instantResult → emailCapture → submit. Zero console/page errors throughout. Confirmed mid-flow animations actually run and match original timing: breather timer fill grows continuously over ~4s; calculating screen's caption rotates through all 4 phrases every 2s and its 6 metric bars count up smoothly over ~5.5s with 350ms stagger; instant-result gauge count-up runs a ~1.1s eased 0%→final% animation (verified sampling `#percentNum` every ~80ms mid-animation: `0%→9%→29%→46%→59%→71%→80%→87%→92%→95%→98%→99%→100%`, ending on the correct final value and correct `.result-label` text for the score given).
+    - Verified the email-capture flow: filled in a test email, submitted, confirmed the `POST /.netlify/functions/subscribe` request fires with the same JSON payload shape as before (email/subtype/score/gender/ageRange/diagnosisStatus) and the app transitions to `thankYou` ("Check your inbox.") on success — the untouched Netlify function itself was not modified.
+    - Took screenshots of 5 screens post-refactor at 390×844 and byte-for-byte `cmp`'d them against screenshots of the same 5 screens captured in an earlier, separate session of this same test environment (pre-existing files already sitting in the scratchpad directory from a prior run) — all 5 (`genderSelect`, `breather`, `calculating`, `emailCapture`, `instantResult`) were **byte-for-byte identical**, which is about as strong a pixel-identical confirmation as is available without a dedicated visual-regression tool.
+  - **`file://` caveat (explicitly requested self-check item):** confirmed via headless Chrome that opening `index.html` directly via `file://` **does break** — Chrome blocks the module fetch with `Access to script at 'file:///.../js/main.js' from origin 'null' has been blocked by CORS policy: Cross origin requests are only supported for protocol schemes: chrome, chrome-extension, ... http, https ...`, so `#card` never renders (empty). This is a real, but narrow and expected, side effect of switching to `<script type="module">`: ES modules must be fetched over http(s) (or equivalent), never `file://`, in any browser — this is standard web-platform behavior, not something introduced by a bug in this split. It does **not** affect the project's actual dev workflow (`npm run dev` already serves over `http://localhost:8080` via live-server, confirmed above), and does not affect the Netlify-deployed production site either (also always served over https). Flagging per the task's explicit instruction, since anyone in the future who tries to just double-click `index.html` to preview it locally (bypassing `npm run dev`) will hit this, whereas the old single-inline-script version worked fine that way.
+
+  **Assumed contract (for backend-dev/QA):** none needed — no backend/API contract changed. `netlify/functions/subscribe.js`'s expected POST body shape (`{ email, subtype, score, gender, ageRange, diagnosisStatus }`) is reproduced exactly as before in `js/main.js`'s `submitEmail()`, and the function itself was not opened for editing (only read, to confirm the contract).
+
+- QA/PO Review:
+
+### QA/PO Review — T014 — PASS
+**Correctness:**
+- Verified backend/deploy surfaces are byte-identical to the committed baseline: `git diff` against the repo's only commit (`dca0ce7`) shows **zero** changes to `netlify/functions/subscribe.js`, `netlify.toml`, or `package.json` — confirmed directly, not just trusted from the changelog. `package-lock.json` is also untouched (`git diff --stat` empty), and its MD5 (`b9b50c5eb700afd56ba86a42d93fe273`) matches every prior task's recorded baseline hash in this file, both before and after my own temporary `puppeteer-core` install/uninstall for testing.
+- Read the full current `index.html` (541 lines) top to bottom: `<head>` (meta tags, Google Fonts `Fredoka`/`Nunito` link, the `unpkg.com/lucide` script tag) and the entire `<style>` block are intact and match the T013-QA'd baseline exactly (spot-checked `--accent`, `.btn.primary` ink-on-accent rule, `.breather-icon` blob shape, chip-tint tokens — all present, unchanged). HTML body structure (`.stage`, `#card`, the dev-panel `<div>` and its explanatory comment) is unchanged. The only script-related content is the single `<script type="module" src="js/main.js"></script>` line exactly where the old inline `<script>` used to be — matches the changelog's item 4 diff claim precisely.
+- Read every file under `js/`: `state.js` contains only data (`QUESTIONS`, `OPTIONS`, `AGE_RANGES`, `GENDER_OPTIONS`, `DIAGNOSIS_OPTIONS`), mutable state + setters, and scoring functions (`partAScore`, `partABand`, `fullScoring`) — zero rendering/DOM code, correctly matching the "no rendering code" requirement. All 5 severity-band `copy` strings match T002's QA'd baseline verbatim; `GENDER_OPTIONS`/`DIAGNOSIS_OPTIONS`/`AGE_RANGES` match T001's QA'd baseline verbatim (`"Nonbinary"`, `"I'm self diagnosed"`, `"18 to 24"` etc.).
+- `js/components/topbar.js` and `js/components/progress.js` are genuinely shared (topbar used by every screen except genderSelect/thankYou/breather/calculating, which the function itself correctly hides; progress used by question+breather only) — correctly placed as shared components, not screen-specific code wrongly extracted. `js/components/companion.js` exports exactly `poseThinkingSvg`/`poseIdleSvg` (grepped — no leftover `poseWavingSvg`/`poseCelebratingSvg`/etc. from earlier reverted tasks), consumed by both `breather.js` (2 of 3 messages) and `calculating.js` — genuinely reused across 2+ screens, correctly living in `components/` rather than being duplicated.
+- Each of the 9 screen modules (`genderSelect`, `ageSelect`, `diagnosisStatus`, `question`, `breather`, `calculating`, `instantResult`, `emailCapture`, `thankYou`) matches what its corresponding prior task's QA-passed changelog established as the final baseline markup (copy strings, class names, CTA button text/onclick targets, disclaimer text, `CALC_METRICS` colors/labels, breather messages/palette) — no drift introduced by the file split.
+- `node --check` on all 15 new `js/**/*.js` files — all parse cleanly.
+- No bundler/build step introduced: `package.json` `devDependencies` unchanged (`live-server`, `netlify-cli` only); no `webpack.config.*`, `vite.config.*`, `tsconfig.*`, `babel.config.*`, or `rollup.config.*` anywhere in the repo root.
+- **Live verification** — ran the project's real `npm run dev` (live-server on :8080 + netlify-cli on :8888, per `scripts/dev-start.sh`). Confirmed `index.html`, `js/main.js`, and nested modules (e.g. `js/components/companion.js`) are served with `Content-Type: text/javascript; charset=utf-8` — no MIME-type issues. Used a temporary `puppeteer-core` install (removed afterward, zero trace per the MD5 check above) at 390×844:
+  - Walked all 9 screens via `?dev=1` + `devJumpTo()` — zero `pageerror` events, zero horizontal overflow (`scrollWidth` stayed 390 on every screen), every screen rendered non-empty content. Only console entry anywhere was the pre-existing, unrelated `favicon.ico` 404 that every prior task in this file has already documented as baseline noise.
+  - Drove the **real end-to-end flow with actual clicks** (no dev jumper): gender → age → diagnosis → all 18 questions. Confirmed breathers correctly triggered exactly 4 times (after questions 4/8/12/16, matching `answeredCount % 4 === 0`) → `calculating` (caption correctly rotated `"Analyzing your answers…"` → `"Cross referencing patterns…"` on schedule, one metric bar observed mid-animation at a plausible intermediate value) → `instantResult` (gauge count-up observed going from 1% mid-animation to a final settled 50%, `.result-label` correctly read "Moderate signs of ADHD-related traits" matching that score) → clicked the CTA → `emailCapture` → filled and submitted a test email.
+  - **Netlify function contract verified end-to-end, not just that the request fired:** captured the actual outgoing `POST http://localhost:8080/.netlify/functions/subscribe` request body — `{"email":"qa-test-t014@example.com","subtype":"Combined","score":32,"gender":"Woman","ageRange":"18 to 24","diagnosisStatus":"I'm diagnosed by a doctor"}` — field names match `subscribe.js`'s destructuring (`email, subtype, score, gender, ageRange, diagnosisStatus`) exactly. Response was `200 {"success":true,"mock":true}`, and cross-checked against `.netlify-dev.log`, which shows the function actually ran server-side, correctly built the beehiiv `custom_fields` payload, hit its mock-mode branch (placeholder `.env` credentials), and logged `"✅ [MOCK] simulated successful subscribe for qa-test-t014@example.com"`. App correctly transitioned to the `thankYou` screen ("Check your inbox.") after the 200 response. Zero `pageerror` events throughout the entire real flow; only console noise was the same pre-existing favicon 404.
+  - Confirmed the disclosed `file://` limitation directly: opening `index.html` via `file://` in headless Chrome does throw `Access to script at 'file:///.../js/main.js' from origin 'null' has been blocked by CORS policy...` and `#card` stays empty — exactly as the changelog described. Confirmed this does **not** affect `npm run dev` (already verified served correctly over `http://localhost:8080` above) or production (Netlify always serves over https).
+- **One item investigated beyond the checklist, verified non-blocking:** the dev-panel comment in `index.html` reads "Enable by adding `?dev=1` to the URL," but live-testing a **fresh load with no query params at all** shows the dev-panel jumper (`#devPanel`) renders visible (`display: flex`, all 9 screen buttons) regardless — `initDevPanel()` is called unconditionally at the bottom of `js/main.js`, with no `URLSearchParams`/`?dev=1` gate anywhere in the codebase (confirmed via grep — the only URL-param gate in the whole app is the unrelated `?debug=1` check inside `thankYou.js`). I confirmed this is **pre-existing, not a T014 regression**: the changelog's own "before" quote (item 4) shows the old inline script's tail was `render(); initDevPanel();` with the identical lack of a conditional — i.e., the dev panel was already unconditionally shown before this refactor too, and the split preserved that exact (arguably buggy, but out-of-scope-for-this-task) behavior byte-for-byte. Flagging as a **pre-existing product issue worth a follow-up task** (the dev jumper should probably actually be gated behind `?dev=1` before launch, matching its own documentation and the `?debug=1` pattern already established elsewhere in the code) — not something that blocks this refactor task, since "pure code-organization, preserve existing behavior exactly" is precisely what happened here.
+
+**User/product perspective:**
+- A user driving the real quiz flow sees no difference at all from the pre-refactor app — same breathers at the same points, same calculating animation, same gauge count-up, same email capture and thank-you copy, same disclaimer. Nothing about the rendered experience changed, which is exactly what was asked for.
+- The deliverables (file tree, `main.js` contents, example screen+component pair, script-tag diff, and the "couldn't cleanly separate" list) were all provided as requested, and each flagged deviation (window-exposed onclick handlers, live-binding shared state, screen-owned animation functions, the extra `js/utils.js` file, the `file://` CORS limitation) is disclosed with clear reasoning rather than silently introduced — matches the task's explicit "flag rather than silently restructure" instruction.
+
+**Contract mismatches:** n/a — `netlify/functions/subscribe.js` was only read, never modified, and the POST payload shape sent by `js/main.js` matches its expected destructuring exactly (verified live, not just by reading both sides statically).
+
+**Verdict:** ready to ship. Structural refactor achieves full behavioral/visual parity with the pre-T014 app; backend/deploy contract is untouched and verified byte-identical; the one pre-existing dev-panel-visibility quirk noted above is unrelated to this task's scope and doesn't block sign-off, but is worth a follow-up ticket before launch.
+
+---
+
+### T015 — Apply the updated quiz-funnel-adhd-ui skill's data-viz palette to the two existing stat-bar components
+- Owner: frontend-design
+- Status: done
+- Context: the `quiz-funnel-adhd-ui` skill (`~/.claude/skills/quiz-funnel-adhd-ui/SKILL.md` + `references/components.md`) was just updated with an approved, narrowly-scoped exception to adhd-ui's single-accent-color rule: **for data/stat-fill elements only** (bar charts, progress-bar stat rows, chart highlights — never buttons/CTAs/nav, which stay locked to `#ffd559` ink-on-accent per the existing rule), flat neutral gray/ink fills (`#2A2A2A`, `#4a4a4a`, `#6b6b6b`, and by the same logic `var(--ink-100)`) are now disallowed as decorative fills, replaced by a warm rotation: `#ffd559` (accent), `#FF9B85` (warm coral), `#5EC8A8` (warm teal), `#8CA3F5` (periwinkle blue), with `#f5c53c` (`--accent-alt-deep`, already defined in this project's `:root`) reserved for a single highlighted/standout value. Read the skill's new "Approved extension" section and its `references/components.md` sections 8–9 (bar chart, progress-bar stat row) before starting — this is the canonical shape/palette, not a starting point to riff on.
+- This project has exactly two existing elements this applies to. **Do not touch anything else** (funnel progress bar/header, buttons, gauge, breather/calculating character art, etc. all stay exactly as-is — they're not data/stat fills):
+  1. **`js/screens/calculating.js`'s `CALC_METRICS` bars** (rendered via `.metric-row`/`.metric-track`/`.metric-fill` in `index.html` ~line 382-403). These are structurally a "progress-bar stat row" per the skill's section 9. Currently their fill colors are `var(--marigold-700)` (#A67A0C), `var(--marigold-800)` (#6E5008), `var(--teal-700)` (#2D9C8F) — replace with a rotation through the canonical 4: `#ffd559`, `#FF9B85`, `#5EC8A8`, `#8CA3F5` (index `i % 4`, so with 6 metrics the 5th/6th reuse the 1st/2nd color). `.metric-track`'s background (`var(--ink-100)`) can stay — the skill's own section-9 snippet uses an equivalent light-gray *track* (`#F5F5F0`) as the acceptable norm; the no-gray rule is about the **fill**, not the track. Align `.metric-track`/`.metric-fill` height/radius to the skill's spec (10px height / 8px radius) if it's a quick change, but don't let that spill into unrelated spacing/layout — flag rather than force it if it conflicts with existing `.metric-row` spacing.
+     - **Read this file's history first**: `TEAM_WORKFLOW.md` T007/T008/T009/T010/T011/T012 record six rounds of fighting over exactly this screen's color scheme (marigold/teal choices, reverts, re-reverts) before T013 explicitly chose to leave `CALC_METRICS` untouched during the adhd-ui reskin. This task is a deliberate, scoped exception to that "leave it alone" decision — driven specifically by the newly-updated skill's canonical palette, not a new freelance redesign. Stick strictly to swapping the fill hex values (and the minor track dimension tweak above) — do not touch the character art, breather timer, layout, copy, or animation timing in this screen or the breather screens.
+  2. **`.skeleton-bar`/`.skeleton-bars` in the `instantResult` locked-teaser** (`index.html` ~line 484-504, rendered by `js/screens/instantResult.js`). These 3 bars currently use a flat `var(--ink-100)` fill and represent a *locked/blurred preview* of a real breakdown chart the user hasn't unlocked yet (behind the email-capture CTA).
+     - Apply the same warm rotation (`#ffd559`, `#FF9B85`, `#5EC8A8` for the 3 bars) **unless you judge the "locked" visual metaphor genuinely depends on looking deliberately muted/grayed-out** — if so, don't silently keep gray either; explicitly flag this specific tradeoff in your changelog (locked-preview legibility vs. the skill's no-gray-fill rule) so QA and the user can weigh in, per this skill's own "flag deviations" rule. Don't guess silently either way without flagging.
+- Acceptance criteria:
+  - [ ] `CALC_METRICS` fill colors use the canonical 4-color warm rotation (`#ffd559`/`#FF9B85`/`#5EC8A8`/`#8CA3F5`), not `--marigold-700`/`--marigold-800`/`--teal-700`.
+  - [ ] `.metric-track` background and overall bar shape stay visually consistent with the app (track can stay light-gray per the skill's own track spec); any height/radius tweak toward 10px/8px is applied cleanly or explicitly skipped with a reason.
+  - [ ] `.skeleton-bar` fills are updated per the above, with the locked-preview tradeoff explicitly flagged either way in the changelog.
+  - [ ] No other screen, component, button, or animation is touched — funnel progress bar, buttons, gauge, breather timer/character art, calculating caption/companion pose, all byte-identical to the T014 baseline.
+  - [ ] Self-check via `npm run dev` + `?dev=1` at 390×844: both `calculating` and `instantResult` screens render with the new colors, no console errors, no layout shift/clipping in the bar rows.
+- Changelog:
+  - Read the T007-T013 history first, as instructed: this screen's colors have been fought over 6+ times (T007's expressive-pose/marigold re-theme → T008 reverted it → T009 tried a 5-family palette → T010 reverted it → T011 landed on marigold+teal → T012 was superseded → T013's adhd-ui reskin explicitly left `CALC_METRICS` untouched, preserving T011's contrast-safe marigold-700/teal-700/marigold-800 rotation). This task is the first deliberate, skill-driven exception to that "leave it alone" line, scoped strictly to fill-color values + one track dimension tweak, per the acceptance criteria — did not touch layout, character art, timing, or copy anywhere.
+  - Read the codebase post-T014 (JS module split) directly rather than trusting old `index.html` line numbers from T007-T013's changelogs, which now refer to a pre-split file. Current locations: `js/screens/calculating.js` (`CALC_METRICS` + `renderCalculating()`), `js/screens/instantResult.js` (`renderInstantResult()`'s `.skeleton-bar`s), and the shared CSS still lives in `index.html`.
+  - **New `:root` tokens added** (`index.html:32-43`, right after the existing `--chip-*` tokens): `--dataviz-coral: #FF9B85`, `--dataviz-teal: #5EC8A8`, `--dataviz-periwinkle: #8CA3F5` — the 3 skill-mandated hexes not already in the token set. Reused the already-existing `--accent` (`#ffd559`) and `--accent-alt-deep` (`#f5c53c`) tokens as the 4th rotation color / single-highlight color respectively, rather than redefining them. Added a code comment explicitly scoping these to data/stat fills only, per the skill's own "flag this deviation" instruction, and noting they must never be used for buttons/CTAs/nav.
+  - **`CALC_METRICS`** (`js/screens/calculating.js:8-28`): replaced the T011-era marigold/teal rotation with the skill's canonical 4-color warm rotation by index `i % 4` — `Anxiety: var(--accent)`, `Stress: var(--dataviz-coral)`, `Restlessness: var(--dataviz-teal)`, `Focus: var(--dataviz-periwinkle)`, `Impulse control: var(--accent)` (reuses 1st), `Emotional regulation: var(--dataviz-coral)` (reuses 2nd) — matches the acceptance criteria's explicit 6-row example. Replaced the old T007/T013 code comment with one explaining the new rationale and the deliberate contrast check below. `.metric-track`'s background (`var(--ink-100)`, already `#F5F5F0`) was left untouched, per the acceptance criteria's explicit "track can stay" instruction — it already matches the skill's own section-9 track spec (`#F5F5F0`) exactly, byte-for-byte.
+  - **`.metric-track` / `.metric-fill`** (`index.html:405-418`): height `8px` → `10px`, border-radius `var(--radius-pill)` (999px) → `8px` on both track and fill — matches the skill's canonical "progress bar stat row" spec (components.md section 9) exactly. This was a clean change with no spacing conflicts (`.metric-row`'s `margin-bottom: 16px` and `.metric-label-row` were untouched and still read correctly at the new bar height — confirmed visually, no layout shift).
+  - **Contrast check — did the legwork this task explicitly asked for, and it surfaced a real judgment call:** computed WCAG relative-luminance contrast for all 4 rotation colors against the `--ink-100` track (`#F5F5F0`) before shipping, specifically because this exact screen has a documented history of a same-territory bug (T007's `marigold-300`-on-track failure, ~1.16:1, sent back by QA). Results: `--accent` (`#ffd559`) ≈ **1.29:1**, `--accent-alt-deep` ≈ 1.48:1, `--dataviz-coral`/`--dataviz-teal` ≈ 1.86-1.87:1, `--dataviz-periwinkle` ≈ 2.21:1. The `--accent` number alone looked alarmingly close to T007's flagged failure mode on paper. But WCAG luminance contrast is a poor proxy for solid-color-patch legibility when the two colors differ in hue/saturation rather than just being two shades of the same pale tone (which is what actually broke T007 — a pale marigold on a near-identical pale warm-ivory track, both desaturated, both warm). Rendered an isolated side-by-side test (5 bars, all 4 rotation colors + `--accent-alt-deep`, each at 70% width on the actual `#F5F5F0` track) in a live headless-Chrome screenshot before touching production code: all 5 are clearly, unambiguously visible — the saturated yellow reads as a normal candy-yellow bar against the near-white track, nothing close to "invisible." Then verified it for real: live-rendered the `calculating` screen, actually triggered `animateCalculatingScreen()` and let it run the full ~6s to a filled state (not just the static 0% render, learning directly from T007's QA callout that a static screenshot alone hides this exact bug class), and screenshotted the result — all 6 bars land at clearly distinct non-zero widths (55%/69%/68%/78%/51%/76% in this run) in 4 clearly distinguishable colors, no bar reads as "stuck at zero" or blends into its track. Concluding this is genuinely fine, not a repeat of T007 — but flagging the WCAG-number-vs-visual-reality gap explicitly here since QA's own review process for this screen has previously (correctly) distrusted static-render self-checks; the filled-state screenshot is the artifact that actually settles it.
+  - **`.skeleton-bar` fills** (`js/screens/instantResult.js`, the 3 `.skeleton-bar` divs inside `renderInstantResult()`'s `.locked-teaser`): applied the warm rotation as suggested — `width:90%` bar → `background:var(--accent)`, `width:75%` bar → `background:var(--dataviz-coral)`, `width:82%` bar → `background:var(--dataviz-teal)` — via inline `style` alongside the existing `width` inline style, overriding `.skeleton-bar`'s CSS-class default of `var(--ink-100)` (that class rule itself was left untouched, so it still serves as a sane fallback if a future 4th bar is added without an explicit background override).
+    - **Flagging the locked-preview tradeoff, as the task explicitly required either way:** chose color over keeping these gray. Reasoning: the "locked" signal on this component comes from the lock icon + "Locked in your full breakdown" header text sitting directly above the bars, not from the bars themselves being desaturated — nothing else on this screen (or in the CSS) currently uses gray-vs-color as a locked/unlocked visual language, so removing the gray doesn't break an existing pattern. These bars are also purely illustrative placeholders (same as `CALC_METRICS`'s bars one screen earlier — not real per-user data), so there's no "premature reveal of real data" concern either way. On the product side, a colorful teaser reads as "here's a preview of the real, richly-detailed chart waiting behind the lock," which is more enticing toward the email-capture CTA immediately below it than a flat gray placeholder — this is directly in the spirit of the skill's stated rationale for the whole warm-palette exception (data/stat elements should feel warm and inviting, not cold/neutral). Screenshotted the live result: reads as intentional, not broken, and the lock/header copy still clearly communicates "you don't have this yet." Happy to revert to `var(--ink-100)` if QA/the user judges the gray-as-locked-metaphor concern outweighs this.
+  - **Confirmed untouched, as required:** funnel progress bar/header (`js/components/progress.js`), all buttons (`.btn.primary` still `var(--accent)`/`var(--ink)`, no new button variant introduced), the results gauge (`.gauge-outer`'s conic-gradient still `var(--accent)`/`var(--ink-100)`, not touched — it's a hero metric, not a "data/stat fill" in the skill's sense, and wasn't named in this task's 2-item scope), breather timer/character art (`js/screens/breather.js`, `js/components/companion.js` — zero references to `dataviz-*` anywhere in either file, confirmed via grep), and the calculating screen's caption/companion pose (`poseThinkingSvg`, `animateCalculatingScreen`'s caption-rotation logic) — all byte-identical to the T014 baseline. Grepped the whole diff-relevant surface for `dataviz-` to confirm the only 5 call sites are the 2 new `:root` definitions' sibling `--accent`/`--accent-alt-deep` reuse plus the 6 `CALC_METRICS` entries plus the 3 `.skeleton-bar` inline styles — nothing leaked into any other screen/component.
+  - No backend/API contract involved — pure client-side CSS token + JS color-array + inline-style change, no assumptions needed for another agent.
+  - **Verification:**
+    - `node --check` on both touched JS module files (`js/screens/calculating.js`, `js/screens/instantResult.js`) — both exit 0, no syntax errors. (Confirmed the check tool itself catches real syntax errors, not just passing silently, by deliberately corrupting a scratch copy and re-running it first.)
+    - Live verification via `python3 -m http.server` + a temp `puppeteer-core` install done entirely inside the scratchpad directory (not the project — confirmed via `git status --porcelain` before/after showing zero new/modified files from the install, no `package.json`/`package-lock.json` touched) against the system's installed Google Chrome, at a 390×844 mobile viewport with `?dev=1`:
+      - `calculating` screen: computed `.metric-track` height/radius = `10px`/`8px`, `.metric-fill` radius = `8px`; the 6 fills' computed `background-color` matched the intended rotation exactly (`rgb(255,213,89)` / `rgb(255,155,133)` / `rgb(94,200,168)` / `rgb(140,163,245)` / repeat 1st/2nd). Manually invoked `animateCalculatingScreen()` (not exposed on `window` by design per T014 — dynamically imported the module in-page to call it directly) and let it run the full ~6s; screenshotted the filled state — all 6 bars clearly visible and distinct, confirmed above.
+      - `instantResult` screen: the 3 `.skeleton-bar` computed background-colors matched exactly (`rgb(255,213,89)` / `rgb(255,155,133)` / `rgb(94,200,168)`); screenshot confirms clean layout, no clipping/overflow inside `.locked-teaser`.
+      - Full 9-screen smoke walk (`genderSelect` → `thankYou` via `devJumpTo`): `document.documentElement.scrollWidth` stayed exactly `390` on every screen (no horizontal overflow introduced anywhere), zero `pageerror` events; the only console entry across the whole session was the same pre-existing, unrelated `favicon.ico` 404 every prior task in this file has already documented.
+      - Cleanup confirmed: removed the scratchpad's temp `puppeteer-core` install, `node_modules`, and its own `package.json`/`package-lock.json` entirely after the run; killed the temp `http.server` process; `git status --porcelain` in the project directory shows no stray files from this verification process.
+  - **Assumed contract:** none — pure client-side CSS custom-property/array/inline-style change, no backend/API surface touched, nothing for another agent's assumptions to conflict with.
+- QA/PO Review:
+
+### QA/PO Review — T015 — PASS
+**Correctness:**
+- Read the T007-T013 history in full before reviewing this task, per the instruction to check it didn't reopen an old fight. Confirmed T007's flagged bug was specifically "a fill nearly indistinguishable from an empty track once animated" (marigold-300 on `--ink-100`, measured at ~1.16:1) — the changelog's own contrast section for T015 explicitly re-derives and cites that exact number, so the comparison is apples-to-apples.
+- Independently recomputed WCAG relative-luminance contrast for all 4 rotation colors against the current `.metric-track` background (`var(--ink-100)`, confirmed live at `index.html:74` to resolve to `#F5F5F0`) with my own script, not trusting the changelog's numbers: `--accent` (`#ffd559`) **1.287:1**, `--accent-alt-deep` **1.485:1**, `--dataviz-coral` **1.868:1**, `--dataviz-teal` **1.864:1**, `--dataviz-periwinkle` **2.214:1** — matches the changelog's quoted figures exactly (to 2-3 decimal places).
+- The `--accent` figure (1.29:1) is close in magnitude to T007's flagged 1.16:1 failure, which is exactly the red flag this review was asked to chase down. Verified directly rather than trusting the changelog's "trust the screenshot, not the math" argument: ran the real `calculating` screen via a live headless-Chrome session against the actual running dev server, dynamically imported `calculating.js` and called `animateCalculatingScreen()` directly (it's intentionally not on `window` post-T014), let it run the full ~6.3s to a filled state, and screenshotted the result. All 6 bars — including both `--accent`-colored rows (Anxiety, Impulse control) — are clearly, unambiguously visible against the track with a crisp visible edge; nothing reads as "stuck at zero" or blends in, unlike T007's actual failure mode. The difference holds up visually: T007's bug was a *desaturated pale marigold* against a *warm pale track*, i.e. two similar low-saturation colors of similar hue; here the track is a *neutral, near-white* gray (`#F5F5F0`, not warm) against a *fully saturated* candy-yellow, so despite the low WCAG luminance-contrast number, the saturation/hue difference alone makes the edge obvious. This is a legitimate distinction, not a rationalization — confirmed with my own eyes on the actual rendered screen, not just accepted from the changelog's prose.
+- Verified all touched code directly (not just the changelog's description):
+  - `js/screens/calculating.js`: `CALC_METRICS` is exactly `accent/dataviz-coral/dataviz-teal/dataviz-periwinkle/accent/dataviz-coral` as claimed, `i % 4` rotation, byte-matches the acceptance criteria's example.
+  - `js/screens/instantResult.js`: the 3 `.skeleton-bar` divs use `var(--accent)` / `var(--dataviz-coral)` / `var(--dataviz-teal)` exactly as claimed.
+  - `index.html:41-43`: `--dataviz-coral: #FF9B85`, `--dataviz-teal: #5EC8A8`, `--dataviz-periwinkle: #8CA3F5` — exact hex match to the skill's canonical palette. Comment block correctly scopes these to data/stat fills only, matching the skill's own "flag this deviation" instruction.
+  - `index.html:405-419`: `.metric-track` is now `height:10px; border-radius:8px`, `.metric-fill` is `border-radius:8px` — exact match to `references/components.md` section 9's canonical progress-bar-stat-row spec. Confirmed live via computed style: `height: 10px`, `borderRadius: 8px` on both.
+- Live-verified end-to-end via a fresh headless-Chrome session against the actual running `npm run dev` server at 390×844 with `?dev=1`: walked all 9 `devJumpTo` screens — zero `pageerror` events, `document.documentElement.scrollWidth` stayed exactly 390 on every screen (no overflow from the bar-shape change), the only network error was the pre-existing, already-documented `favicon.ico` 404 (confirmed via a dedicated `response` listener — no other 4xx/5xx anywhere).
+- Regression check on scope containment: grepped the whole `index.html` + `js/` tree for `dataviz` — the only 8 hits are the 3 new `:root` definitions, the 5 call sites in `calculating.js`/`instantResult.js` named above, and one explanatory comment. Read `js/screens/breather.js` directly — untouched, still T013's chip-yellow/chip-teal/chip-coral `pale` + `--accent` `solid` values, zero `dataviz-*` references. Read `.breather-timer-track`/`.breather-timer-fill` CSS (`index.html:444-455`) — still `width:130px; height:5px; border-radius:var(--radius-pill)`, byte-identical to the T014 baseline, confirming the metric-bar radius/height tweak was correctly scoped to only the calculating screen's bars and didn't leak into the breather timer. Live-checked `.btn.primary` computed style on `instantResult` (`rgb(255,213,89)` / `rgb(42,42,42)` / `16px` radius) and `.gauge-outer`'s computed `background-image` (still `conic-gradient(rgb(255,213,89) ...)`) — both untouched, confirming buttons and the results gauge are byte-identical to pre-T015.
+- `node --check` on both touched files (`js/screens/calculating.js`, `js/screens/instantResult.js`) — both exit 0.
+
+**User/product perspective:**
+- The calculating screen genuinely reads better than any prior iteration in this file's history: 6 clearly-distinguishable, saturated, cheerful colors filling smoothly, no "is this bar broken" ambiguity — directly addresses what T007 got wrong and what T011 only partially solved (T011's marigold-700/800/teal-700 rotation was safe but visually muted next to this).
+- On the flagged skeleton-bar judgment call (color vs. keep gray for the "locked" look): agree with frontend-design's call. The lock icon + "Locked in your full breakdown" header text already unambiguously communicates "you don't have this yet" — nothing else in this app uses gray-vs-color as a lock/unlock signal, so there's no existing pattern being broken. Live screenshot of the `instantResult` screen confirms it reads as "an enticing preview of a colorful chart waiting behind the paywall," not as a broken/miscolored locked state — this arguably helps the email-capture conversion goal more than a flat gray placeholder would, consistent with the skill's own stated rationale for the warm-palette exception. This was flagged properly per the task's explicit either-way-flag requirement, and the choice itself holds up under review.
+- Scope discipline was excellent: this task's own acceptance criteria plus the file's own bruising 6-round history made "don't touch anything else" the single highest-risk item, and the diff genuinely stayed contained to the 2 named components (grep-confirmed, not just self-reported).
+
+**Contract mismatches:** n/a — pure client-side CSS custom-property/JS color-array/inline-style change, no backend/API surface touched, nothing for another agent's assumptions to conflict with.
+
+**Verdict:** ready to ship. All acceptance criteria met: `CALC_METRICS` and `.skeleton-bar` fills use the canonical 4-color warm rotation with exact hex matches to the skill, `.metric-track`/`.metric-fill` now match the skill's 10px/8px progress-bar-stat-row spec, the locked-preview color-vs-gray tradeoff was explicitly flagged with sound reasoning, and nothing outside the two named components was touched (verified by direct grep/read, not just trusting the changelog). The one number that looked alarming on paper (`--accent` at 1.29:1 against the track, in the same range as T007's 1.16:1 failure) was chased down with a live, animated, filled-state screenshot rather than accepted on faith — and it holds up: this is not a repeat of T007's bug, because the failure mode there was two similarly-desaturated warm tones, not a low luminance-contrast number in isolation. Marking T015 `done`.
+

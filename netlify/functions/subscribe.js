@@ -18,7 +18,7 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
   }
 
-  const { email, subtype, score, gender, ageRange, diagnosisStatus } = payload;
+  const { email, subtype, score, gender, ageRange, diagnosisStatus, utm_source, utm_medium, utm_campaign } = payload;
 
   if (!email || typeof email !== 'string') {
     console.error('[subscribe] ❌ missing/invalid email in payload:', payload);
@@ -48,6 +48,11 @@ exports.handler = async function (event) {
       { name: 'quiz_gender', value: gender || 'Unknown' },
       { name: 'quiz_age_range', value: ageRange || 'Unknown' },
       { name: 'quiz_diagnosis_status', value: diagnosisStatus || 'Unknown' },
+      // Traffic source from the landing URL's utm_* params, so beehiiv
+      // segments can be split by channel. 'direct' = no UTM tags.
+      { name: 'utm_source', value: utm_source || 'direct' },
+      { name: 'utm_medium', value: utm_medium || 'none' },
+      { name: 'utm_campaign', value: utm_campaign || 'none' },
     ],
   };
 

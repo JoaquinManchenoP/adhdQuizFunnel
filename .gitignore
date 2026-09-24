@@ -3,3 +3,7 @@ node_modules
 .env
 .netlify-dev.pid
 .netlify-dev.log
+.dev-pids
+.live-server.log
+.DS_Store
+.claude/worktrees/
