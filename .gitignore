@@ -1,6 +1,7 @@
 node_modules
 .netlify
 .env
+beehiiv.txt
 .netlify-dev.pid
 .netlify-dev.log
 .dev-pids

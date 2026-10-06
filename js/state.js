@@ -16,7 +16,7 @@
    values are also expected to be changed only via `setAnswer()`.
    ============================================================ */
 
-/* ---------------- QUESTION DATA (18-item set) ---------------- */
+/* ---------------- QUESTION DATA (22-item set) ---------------- */
 export const QUESTIONS = [
   { text: "How often do you start something, then never actually finish it?", domain: "A" },
   { text: "How often do you just forget things you meant to do?", domain: "A" },
@@ -39,6 +39,7 @@ export const QUESTIONS = [
   { text: "How often little things set you off more than they probably need to?", domain: "C" },
   { text: "How often is it hard to stop one thing and start another?", domain: "C" },
   { text: "Are you harder on yourself than you'd ever be on anyone else?", domain: "C", options: ["No", "Yes"] },
+  { text: "How often do bills or payments slip through the cracks?", domain: "C" },
 ];
 
 export const OPTIONS = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
@@ -51,6 +52,7 @@ export let breatherIndex = 0;
 export let selectedGender = null;
 export let selectedAge = null;
 export let selectedDiagnosis = null;
+export let submittedEmail = null;
 export const AGE_RANGES = ["18 to 24", "25 to 34", "35 to 44", "45 to 54", "55 to 64", "65+"];
 export const GENDER_OPTIONS = ["Woman", "Man", "Nonbinary", "Prefer not to say"];
 export const DIAGNOSIS_OPTIONS = ["I'm diagnosed by a doctor", "I'm self diagnosed", "I suspect I might have ADHD", "Something else"];
@@ -64,6 +66,7 @@ export function setBreatherIndex(i) { breatherIndex = i; }
 export function setSelectedGender(i) { selectedGender = i; }
 export function setSelectedAge(i) { selectedAge = i; }
 export function setSelectedDiagnosis(i) { selectedDiagnosis = i; }
+export function setSubmittedEmail(e) { submittedEmail = e; }
 export function setAnswer(index, value) { answers[index] = value; }
 
 /* ---------------- Scoring ---------------- */

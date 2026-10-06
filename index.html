@@ -128,6 +128,84 @@
 
   * { box-sizing: border-box; }
 
+  /* ============================================================
+     TASK-4 — canonical type scale.
+     Every font-size rule in this stylesheet (and every text-bearing
+     element in js/screens/*.js and js/components/*.js — none of them
+     carry an inline font-size anymore) draws from exactly these 5
+     steps. No inline font-size is permitted anywhere outside this
+     block; no new distinct font-size value should be introduced
+     without updating this comment. Dev panel buttons (#devPanel,
+     11px) are one documented exception — a developer-only tool,
+     never seen by a real user, out of scope for this scale. T020 adds
+     a second, deliberate exception (see that Heading/Interactive-label
+     entries below, and the T020 task block in TEAM_WORKFLOW.md for
+     full rationale): `.adhd-gender-h1` and `.adhd-gender-opt-label`
+     now intentionally run ABOVE the shared Heading/Interactive-label
+     steps, scoped to the genderSelect screen only. This was a direct,
+     explicit user decision (not inferred) made after live
+     `getComputedStyle` checks confirmed this screen's text was
+     byte-identical in size to the rest of the app, yet still visually
+     read as smaller — so the fix is a deliberate step up in this one
+     screen's numbers, not a bug in the shared scale.
+
+     Display   — Fredoka, 700, 39px,        line-height: normal
+       Role: the one hero stat number in the product (`.gauge-percent`,
+       instantResult's score gauge). Deliberately the single oversized
+       outlier — nothing else competes with it for attention.
+
+     Heading   — Fredoka, 600, 22px,        line-height: 1.3
+       Role: THE primary heading on every one of the 8 funnel screens —
+       identical font-size/weight/line-height everywhere by design
+       (global `h1`, `.question-text`, `.breather-text`,
+       `.result-label`). Only color/margin/max-width/letter-spacing
+       vary per screen; the type itself never does.
+       EXCEPTION (T020): `.adhd-gender-h1` is bumped to 26px (weight
+       600, line-height 1.3 unchanged) — a deliberate, scoped deviation
+       from this step, not drift. See the note above.
+       EXCEPTION: `.question-text` (ageSelect/diagnosisStatus/question.js
+       — the actual quiz question prompts, several of which wrap to 2-3
+       lines) is bumped to line-height 1.45 so wrapped prompts are easier
+       to read; font-size/weight unchanged, and every other Heading-step
+       element (`h1`, `.breather-text`, `.result-label`) stays at 1.3 —
+       this is a deliberate, scoped deviation, not drift.
+
+     Topbar title — Fredoka, 600, 16px
+       Role: the small screen-title label in the shared topbar
+       (`.topbar .label`) — nav chrome, not a page heading, so it gets
+       its own (smaller) size on the same Fredoka family.
+
+     Interactive-label — Nunito, 700–800 (varies by element), 16px
+       Role: anything a user taps or types into as the primary action —
+       option-row labels (`.option`), primary button labels (`.btn`,
+       `.adhd-gender-continue`), and typed form input text
+       (`input[type="email"]`). Unified to one size per TASK-4 AC5
+       (option-rows and buttons were previously 2 sizes each); weight
+       is kept per-element since `.option` reads fine at 700 while the
+       two buttons were already 800.
+       EXCEPTION (T020): `.adhd-gender-opt-label` is bumped to 18px
+       (weight 800 unchanged) — a deliberate, scoped deviation from
+       this step, not drift. Note this also happens to restore the
+       exact pre-TASK-4-unification size `.option` used to carry. See
+       the note above.
+
+     Body      — Nunito, 500–700 (hint is bold), 15px, line-height 1.5
+       Role: supporting paragraph copy under a heading (`p.lede`,
+       `.lede.small` — the `.small` modifier now only adjusts margin,
+       since its old 15.5px duplicated this step) and the one bolded
+       inline hint (`.question-hint`).
+
+     Caption   — Nunito, 500–800 (varies by element), 14px
+       Role: every remaining fine-print/micro-copy element in the app —
+       `.disclaimer`, `.trust-row span`, `.field-label`,
+       `.locked-teaser-header`, `.metric-label-row`, `.gauge-caption`,
+       plus genderSelect's own `.adhd-gender-eyebrow`, `.adhd-gender-sub`,
+       and `.adhd-gender-skip a`. This is also the app-wide floor: 14px
+       is the smallest font-size anywhere outside the dev panel (TASK-4
+       AC6) — the skip link and eyebrow were previously 12px and the
+       genderSelect subtext was 13px; all three are raised to this step.
+     ============================================================ */
+
   /* Body background — adhd-ui backgrounds are white or --card, never a
      warm off-white/cream (that's exactly the tone rule 2 of the skill
      bans). Repointed from the old --ink-50 to --white per T013. */
@@ -136,12 +214,26 @@
     background: var(--white);
     color: var(--text-strong);
     font-family: 'Nunito', sans-serif;
+    /* TASK-2 fix: 100dvh (where supported) accounts for mobile browser
+       chrome collapsing/expanding, with 100vh kept as the fallback line
+       for browsers that don't understand dvh — the dvh line simply wins
+       by source order in browsers that do. */
     min-height: 100vh;
+    min-height: 100dvh;
     position: relative;
     overflow-x: hidden;
     display: flex;
     justify-content: center;
-    padding: 28px 23px 92px;
+    /* TASK-2 fix: was `92px` bottom, reserved solely for the always-on
+       dev panel (see #devPanel below, now gated behind ?dev=1 in
+       js/main.js's initDevPanel()) — reclaimed down to 28px, mirroring
+       the existing top padding, now that production users never render
+       the panel. env(safe-area-inset-bottom) is deliberately NOT used
+       here: index.html's viewport meta has no `viewport-fit=cover`, so
+       the env() value would always resolve to 0 and do nothing — see
+       this task's submission for the full rationale (static value
+       chosen over a non-functional env() call). */
+    padding: 28px 23px 28px;
   }
 
   /* NOTE: the mockup's ".phone" frame (border, shadow, 28px radius) is
@@ -162,10 +254,14 @@
     color: var(--text-strong); padding: 0;
     display: flex; align-items: center;
     width: 25px; height: 25px;
+    /* T018: tap feedback added — this nav control had none before,
+       unlike every other tappable control in the app. */
+    transition: transform .12s ease;
   }
+  .topbar .back:active { transform: scale(0.88); }
   .topbar .label {
     font-family: 'Fredoka', sans-serif;
-    font-weight: 600; font-size: 17px; color: var(--text-strong);
+    font-weight: 600; font-size: 16px; color: var(--text-strong);
   }
   .topbar .spacer { width: 25px; }
 
@@ -203,24 +299,10 @@
   }
   .icon-square.mint { background: var(--chip-teal); }
 
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--on-accent-label);
-    background: var(--accent);
-    padding: 7px 14px;
-    border-radius: var(--radius-pill);
-    margin-bottom: 23px;
-  }
-
   h1 {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
-    font-size: 28px;
+    font-size: 22px;
     line-height: 1.3;
     letter-spacing: -0.01em;
     color: var(--text-strong);
@@ -229,24 +311,42 @@
 
   p.lede {
     font-family: 'Nunito', sans-serif;
-    font-size: 17px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.5;
     color: var(--text-muted);
     margin: 0 0 32px 0;
     font-weight: 500;
   }
   p.lede.centered { text-align: center; }
-  p.lede.small { font-size: 15.5px; margin-bottom: 25px; }
+  p.lede.small { margin-bottom: 25px; }
 
   .question-text {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
-    font-size: 25px;
-    line-height: 1.35;
+    font-size: 22px;
+    /* Bumped from 1.3 (see the Heading type-step EXCEPTION note above) —
+       wrapped 2-3 line question prompts were hard to read at the tighter
+       default line-height. */
+    line-height: 1.45;
     letter-spacing: -0.005em;
     color: var(--text-strong);
-    margin: 0 0 28px 0;
+    /* Standardized to 25px — the same question/subtitle-to-options gap
+       used everywhere else in the funnel (p.lede.small's own
+       margin-bottom, and .question-hint's below), so ageSelect's and
+       diagnosisStatus's gap to their first option/subtitle now matches
+       question.js's gap exactly. Previously 22px (itself trimmed from
+       28px by TASK-4 for 320x568 overflow); question.js's own
+       .question-text--tight modifier below overrides this anyway. */
+    margin: 0 0 25px 0;
   }
+  /* Standardized to 25px (previously 10px, a TASK-2 overflow fix) to
+     match the same question-to-options gap used app-wide — see the base
+     .question-text rule above. Scoped to js/screens/question.js only;
+     this reopens some scroll on this screen's longest 3-line prompts at
+     the 320x568 floor, but matching the standard spacing was an explicit
+     ask and that floor already isn't scroll-free elsewhere (e.g.
+     ageSelect, 6 options, already overflows there). */
+  .question-text.question-text--tight { margin-bottom: 25px; }
 
   .options { display: flex; flex-direction: column; gap: 11px; }
 
@@ -254,8 +354,20 @@
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
     font-size: 15px;
+    line-height: 1.5;
     color: var(--ink);
-    margin: -16px 0 16px 0;
+    /* top margin changed from -16px (which previously overlapped the
+       question text above). Adjacent block margins collapse to their
+       max, not their sum, so to make the visible gap above this hint
+       match the question-to-subtitle/options gap used everywhere else
+       in the app (now standardized to 25px — see the base
+       .question-text and .question-text--tight rules above) this needs
+       to be 25px outright, not stacked on top of
+       .question-text--tight's own margin-bottom. Live-verified via
+       getBoundingClientRect(). Bottom margin is 25px too, matching
+       p.lede.small's own margin-bottom (the subtitle-to-first-option
+       gap used on diagnosisStatus and every other subtitled screen). */
+    margin: 25px 0 25px 0;
   }
 
   /* Answer row — exact structure: flex row, space-between, so a check
@@ -272,14 +384,18 @@
     background: var(--card);
     cursor: pointer;
     font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
+    font-weight: 800;
+    font-size: 16px;
     color: var(--text-strong);
     text-align: left;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   }
   .option:hover { transform: translateY(-1px); }
-  .option:active { transform: translateY(0) scale(0.99); }
+  /* T018: press scale unified to -0.97 (was -0.99) to match the
+     adhd-opt press pattern used elsewhere in the app, so tap feedback
+     reads consistently app-wide; timing (0.15s, from the transition
+     rule above) is unchanged. */
+  .option:active { transform: translateY(0) scale(0.97); }
   .option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .option.selected {
     background: var(--chip-yellow);
@@ -311,7 +427,7 @@
   .btn {
     font-family: 'Nunito', sans-serif;
     font-weight: 800;
-    font-size: 17px;
+    font-size: 16px;
     border: none;
     border-radius: var(--radius-lg);
     height: 55px;
@@ -322,57 +438,18 @@
     cursor: pointer;
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
-  .btn:active { transform: scale(0.98); }
+  /* T018: press scale unified to -0.97, matching .option/.adhd-opt. */
+  .btn:active { transform: scale(0.97); }
   .btn.primary { background: var(--accent); color: var(--ink); }
   .btn.primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .microcopy {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--text-subtle);
-    text-align: center;
-    margin-top: 12px;
-  }
-
-  /* Severity badge — adhd-ui doesn't define severity colors, so this
-     uses the skill's chip-tint rotation instead of the old saturated
-     mint/coral/blue trio: calmer chip-teal for Low, neutral chip-yellow
-     for Moderate (the unmodified base class), warmer chip-coral for
-     High. Text is --ink for all three (matching the component library's
-     own pale-yellow eyebrow-pill example, which also uses plain ink text
-     directly on a chip background — --on-accent-label is reserved for
-     text on the *solid* accent color specifically, not pale chip tints). */
-  .band-badge {
-    display: inline-block;
-    padding: 7px 16px;
-    border-radius: var(--radius-pill);
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 14.5px;
-    margin-bottom: 5px;
-    background: var(--chip-yellow);
-    color: var(--ink);
-  }
-  .band-badge.low { background: var(--chip-teal); color: var(--ink); }
-  .band-badge.high { background: var(--chip-coral); color: var(--ink); }
-
-  .disclaimer {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text-subtle);
-    border-top: 1px solid var(--border-subtle);
-    margin-top: 28px;
-    padding-top: 18px;
-  }
 
   .trust-row {
     display: flex;
     align-items: flex-start;
     gap: 9px;
-    margin-top: 18px;
+    /* 14px rather than the 18px used elsewhere — see .locked-teaser's
+       margin-bottom note (same 390x844 safety-margin pass). */
+    margin-top: 14px;
   }
   .trust-row svg { flex-shrink: 0; margin-top: 1px; }
   .trust-row span {
@@ -387,7 +464,7 @@
     display: block;
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-strong);
     margin-bottom: 7px;
   }
@@ -400,22 +477,43 @@
     border-radius: var(--radius-md);
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
-    font-size: 17px;
+    font-size: 16px;
     background: var(--surface-page);
     color: var(--text-strong);
   }
   input[type="email"]:focus-visible { outline: none; border-color: var(--ink-900); border-width: 2px; }
 
-  .calc-companion-icon { display: inline-block; margin-bottom: 23px; }
+  /* TASK-4 fix (AC8): margin-bottom trimmed 23px->10px — scoped to
+     calculating only, closes its 320x568 overflow. */
+  .calc-companion-icon { display: inline-block; margin-bottom: 10px; }
 
-  .metric-row { margin-bottom: 18px; }
+  /* T018: companion/mascot entrance flourish. Applied to the calculating
+     screen's companion icon and the breather screen's illustration slot
+     (js/screens/calculating.js, js/screens/breather.js) — previously
+     those only appeared via the parent `.fade-in` wrapper's generic
+     opacity/translateY fade, with no animation of their own. Follows the
+     same base-opacity-0 + `animation ... both` pattern as `.adhd-fade`
+     above (see the reduced-motion override further down) rather than a
+     new pattern. Slight delay (.08s) so it plays just after the parent
+     fade-in starts, reading as a small sequenced "hello" instead of two
+     competing motions firing at once. */
+  @keyframes charPopIn {
+    0% { opacity: 0; transform: scale(.75); }
+    60% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .char-pop-in { opacity: 0; animation: charPopIn .5s cubic-bezier(.34,1.4,.64,1) .08s both; }
+
+  /* TASK-4 fix (AC8): margin-bottom trimmed 18px->13px (x6 rows) —
+     scoped to calculating only, closes its 320x568 overflow. */
+  .metric-row { margin-bottom: 13px; }
   .metric-row:last-child { margin-bottom: 0; }
   .metric-label-row {
     display: flex;
     justify-content: space-between;
     font-family: 'Nunito', sans-serif;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-muted);
     margin-bottom: 7px;
   }
@@ -460,8 +558,8 @@
   .breather-text {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
-    font-size: 24px;
-    line-height: 1.45;
+    font-size: 22px;
+    line-height: 1.3;
     letter-spacing: -0.01em;
     color: var(--text-strong);
     max-width: 368px;
@@ -485,6 +583,402 @@
   .fade-in { animation: fadeIn 0.3s cubic-bezier(.4,0,.2,1); }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+  /* ============================================================
+     T016 — accent-flip demographic screen (genderSelect)
+     Per the quiz-funnel-adhd-ui skill's "Optional extension: an
+     accent-flip demographic screen" + references/components.md
+     section 10. This is the one other full-bleed, non-white screen in
+     the funnel (besides the — in this codebase, not literally
+     full-ink-bled — Loading screen concept): solid #ffd559, no shared
+     topbar/progress-bar chrome, always skippable. Scoped entirely to
+     `.adhd-*` classes so it can't collide with any other screen's
+     styling.
+
+     `.adhd-gender-screen` uses position:fixed to break out of the
+     app's normal centered/padded `.stage` column and go edge-to-edge
+     of the real viewport ("full-bleed"). Originally shipped with
+     `bottom:92px` to match the dev-panel reservation body's padding
+     carried at the time — TASK-2 reclaimed that (the dev panel is now
+     gated behind ?dev=1 instead of always-on, and body's own padding
+     no longer reserves 92px either), so this is `bottom:0` for true
+     edge-to-edge coverage. (D8, TASK-4: this paragraph previously still
+     asserted the pre-TASK-2 92px state as current — corrected.)
+
+     QA fix (post-T016): the full-bleed color is correct per spec, but
+     the *content* was also stretching edge-to-edge at wide viewports,
+     unlike every other screen which stays boxed at `.stage`'s
+     max-width:450px. `.adhd-gender-inner` now wraps the actual content
+     (header/body/CTA/skip) and is capped at max-width:450px, centered
+     via margin:auto, mirroring `.stage`. The outer `.adhd-gender-screen`
+     stays full-bleed for the background only.
+     ============================================================ */
+  @keyframes adhd-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes adhd-pulse-glow { 0%, 100% { transform: scale(1); opacity: .5; } 50% { transform: scale(1.2); opacity: .9; } }
+  @keyframes adhd-shimmer { 0%, 100% { box-shadow: 0 0 0 0 rgba(42,42,42,0); } 50% { box-shadow: 0 0 16px 2px rgba(42,42,42,.18); } }
+  .adhd-fade { opacity: 0; animation: adhd-fade-up .5s ease both; }
+  .adhd-glow { animation: adhd-pulse-glow 2.6s ease-in-out infinite; }
+  .adhd-shimmer { animation: adhd-shimmer 2.4s ease-in-out infinite; }
+  .adhd-opt { transition: transform .15s ease, box-shadow .15s ease; }
+  .adhd-opt:active { transform: scale(.97); }
+
+  /* TASK-1 fix 1: html/body background is painted yellow ONLY while
+     genderSelect is mounted (class toggled in js/main.js's render()),
+     so iOS overscroll/bounce beyond the fixed .adhd-gender-screen box
+     (and the reserved bottom safe-zone below it) shows yellow instead
+     of the global white body background. The unscoped `body{...}`
+     rule above is left completely untouched; these rules only win via
+     higher selector specificity when `.adhd-gender-active` is present,
+     and are removed the instant the user advances or skips. */
+  html.adhd-gender-active { background: #ffd559; }
+  html.adhd-gender-active body { background: #ffd559; }
+
+  .adhd-gender-screen {
+    position: fixed;
+    /* TASK-2 fix: was `bottom:92px`, reserved for the always-on dev
+       panel (now gated behind ?dev=1) — reclaimed to true edge-to-edge,
+       exactly the "known follow-up" already flagged in this block's
+       original T016 comment above. */
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ffd559;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 20;
+  }
+  /* QA fix: wraps the screen's real content and caps it at .stage's
+     max-width:450px, centered — the outer .adhd-gender-screen remains
+     full-bleed for the background color only. */
+  .adhd-gender-inner {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    box-sizing: border-box;
+  }
+  .adhd-gender-header {
+    /* TASK-2 fix (R5/C6): top padding trimmed 26px->16px, one of several
+       small .adhd-gender-* only reductions closing the shell's internal
+       overflow at 360x640 now that bottom:0 reclaims the dev-panel gap —
+       first-page-scoped, doesn't touch any shared rule or TASK-1's four
+       protected fixes (icon removal, background scoping, button color,
+       the two >=24px CTA/skip gaps).
+       TASK-4 fix (AC8/PC2): trimmed further, 16px->8px, to re-close the
+       320x568 floor after the AC6 floor-raise below added height back. */
+    padding: 8px 24px 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .adhd-gender-back {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 2px solid #2A2A2A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .adhd-gender-back:focus-visible { outline: 2px solid #2A2A2A; outline-offset: 2px; }
+  .adhd-gender-body {
+    /* TASK-2 fix (R5/C6): top padding + inter-item gap both trimmed.
+       TASK-4 fix (AC8/PC2): trimmed further to re-close 320x568. */
+    padding: 6px 24px 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .adhd-gender-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    width: fit-content;
+    margin: 0 auto;
+    /* TASK-4 fix (AC6): padding trimmed 8px/14px->4px/10px to help offset
+       the font-size floor-raise below (12px->14px, Caption step), and
+       further to re-close 320x568 (AC8/PC2). */
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    /* TASK-4 fix (AC6): was 12px — below the 14px floor and the only
+       tappable-adjacent decorative text in the funnel under 14px. Now
+       the Caption step (14px). */
+    font-size: 14px;
+    color: #2A2A2A;
+  }
+  .adhd-gender-heading { text-align: center; }
+  .adhd-gender-h1 {
+    font-family: 'Fredoka', sans-serif;
+    /* T020: deliberate, scoped exception to the shared 22px Heading step
+       — see the "canonical type scale" comment block (~line 131) for the
+       full rationale. Bumped 22px->26px. */
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0;
+    color: #2A2A2A;
+    line-height: 1.3;
+  }
+  .adhd-gender-sub {
+    font-family: 'Nunito', sans-serif;
+    /* TASK-4 fix (AC6): Caption step (was 13px, below the floor). */
+    font-size: 14px;
+    color: #6b5a12;
+    font-weight: 700;
+    /* TASK-4 fix: line-height trimmed 1.6->1.5 to help offset the
+       font-size floor-raise above; top margin trimmed further for
+       320x568 (AC8/PC2). */
+    line-height: 1.5;
+    margin: 3px 0 0 0;
+  }
+  /* Post-icon-removal redesign: this was a flex column of thin icon+label
+     rows — once the per-option profile icon was removed (user request),
+     those rows read as cramped, undersized tap targets. Rebuilt as a 2x2
+     grid of large centered cards instead, each one a proper tappable
+     surface in its own right rather than a thin strip. Scoped entirely to
+     `.adhd-gender-*` — no other screen's option/card styling is touched. */
+  .adhd-gender-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .adhd-gender-opt {
+    all: unset;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 116px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .adhd-gender-opt:active { transform: scale(.97); }
+  .adhd-gender-opt.adhd-opt-selected { box-shadow: 0 0 0 2px #2A2A2A, 0 4px 14px rgba(0,0,0,.08); }
+  .adhd-gender-opt:focus-visible { outline: 2px solid #2A2A2A; outline-offset: 2px; }
+  .adhd-gender-opt-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    /* T020: deliberate, scoped exception to the shared 16px
+       Interactive-label step — see the "canonical type scale" comment
+       block (~line 131). Bumped 16px->18px (this is also exactly the
+       pre-TASK-4-unification size `.option` used to carry, so it's a
+       restoration, not an arbitrary new value). */
+    font-size: 18px;
+    color: #2A2A2A;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .adhd-gender-cta { padding: 0 24px 24px 24px; flex-shrink: 0; }
+  .adhd-gender-continue {
+    all: unset;
+    box-sizing: border-box;
+    display: block;
+    text-align: center;
+    width: 100%;
+    background: #2A2A2A;
+    color: #ffffff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    /* TASK-4 fix (AC8/PC2): trimmed 17px->14px to help re-close 320x568.
+       Does not change the >=24px gaps on either side of this button
+       (TASK-1 AC10/11) — those are governed by the surrounding
+       .adhd-gender-cta/skip wrapper padding and the spacer's
+       min-height, neither of which is touched here. */
+    padding: 14px;
+    border-radius: 18px;
+    cursor: pointer;
+  }
+  /* T018: aligned to -0.97 for app-wide press-feedback consistency. */
+  .adhd-gender-continue:active { transform: scale(.97); }
+  .adhd-gender-continue:focus-visible { outline: 2px solid #ffd559; outline-offset: 2px; }
+  .adhd-gender-skip { padding: 0 24px 26px 24px; text-align: center; flex-shrink: 0; }
+  .adhd-gender-skip a {
+    font-family: 'Nunito', sans-serif;
+    /* TASK-4 fix (AC6): was 12px — the only interactive/tappable element
+       in the app under 14px, a real accessibility defect. Caption step. */
+    font-size: 14px;
+    font-weight: 800;
+    color: #6b5a12;
+    cursor: pointer;
+  }
+  .adhd-gender-skip a:focus-visible { outline: 2px solid #2A2A2A; outline-offset: 2px; }
+
+  /* ============================================================
+     thankYou screen redesign.
+     Same full-bleed position:fixed technique as .adhd-gender-screen
+     above (js/main.js's render() special-cases this screen the same
+     way), but with no background color override — it just needs true
+     viewport centering, not a color flip, so it sits on the normal
+     body background. No env(safe-area-inset-*): index.html's viewport
+     meta has no viewport-fit=cover, so that would always resolve to 0
+     (see this task's submission) — static padding only.
+
+     The content itself (js/screens/thankYou.js) is a small celebratory
+     close to the funnel: the companion mascot, a checkmark badge that
+     draws itself in, and a one-shot confetti burst, all built from
+     adhd-ui tokens and classes already used elsewhere (.adhd-fade,
+     .adhd-glow, .char-pop-in) plus a handful of new `.ty-*` rules below
+     for what's genuinely new to this screen. Every new animation here
+     fires once on mount (confetti, checkmark draw, staggered fade-up);
+     only the mascot's gentle float bob loops, and only slowly/subtly —
+     per adhd-ui's low-clutter ethos this is one focused moment, not
+     ambient motion fighting the rest of the (calm, static) page.
+     ============================================================ */
+  .thankyou-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    background: var(--white);
+    z-index: 20;
+    overflow-y: auto;
+  }
+  /* Mirrors .adhd-gender-inner's existing pattern (full-bleed shell +
+     max-width:450px content wrapper) so text doesn't stretch to an
+     oversized measure at 1440x900 — same 450px value as .stage. */
+  .thankyou-inner {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .thankyou-inner h1 { margin-bottom: 8px; }
+
+  /* Badge zone: mascot + glow + confetti + checkmark badge, all
+     centered on the same point so the confetti burst and glow read as
+     emanating from the mascot itself. */
+  .ty-badge-wrap {
+    position: relative;
+    width: 150px; height: 150px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .ty-confetti-wrap { position: absolute; inset: 0; }
+  .ty-confetti-dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 8px; height: 8px;
+    margin: -4px;
+    border-radius: 50%;
+    opacity: 0;
+    animation: ty-confetti-burst .8s cubic-bezier(.22,.9,.32,1) both;
+  }
+  @keyframes ty-confetti-burst {
+    0% { transform: translate(0,0) scale(.4); opacity: 0; }
+    30% { opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+  }
+  /* Slow, small-amplitude bob — a "taking a bow" gesture, not a bounce;
+     kept gentle on purpose so it reads as calm/celebratory rather than
+     frantic, matching this app's ADHD-friendly low-stimulation intent. */
+  .ty-mascot-float { animation: ty-float 3.4s ease-in-out infinite; }
+  @keyframes ty-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .ty-check-badge {
+    position: absolute;
+    bottom: 2px; right: 6px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 3px solid var(--white);
+    display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box;
+  }
+  .ty-check-path {
+    stroke-dasharray: 16;
+    stroke-dashoffset: 16;
+    animation: ty-check-draw .35s ease .55s forwards;
+  }
+  @keyframes ty-check-draw { to { stroke-dashoffset: 0; } }
+
+  .ty-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--chip-yellow);
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--on-accent-label);
+    margin-bottom: 14px;
+  }
+  .ty-mark { background: var(--accent); padding: 0 10px; border-radius: 8px; }
+
+  .ty-next-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 6px 0 22px 0;
+  }
+  .ty-next-row {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+  }
+  .ty-next-icon {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .ty-next-row span {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-strong);
+  }
+
+  /* Secondary button, per adhd-ui's own component library (component
+     #6's third "secondary" variant) — reused verbatim rather than the
+     locked accent `.btn.primary` treatment, since this is an optional
+     exit action, not the screen's primary CTA (there is no primary CTA
+     here; the job this screen does — confirm the email send — is
+     already done the moment it renders). */
+  .ty-retake {
+    background: var(--card);
+    border: 2px solid var(--border);
+    color: var(--text-strong);
+  }
+
+  /* Only reached with ?debug=1 — a developer-only scoring dump, not part
+     of the real user-facing content. overflow-y:auto (not hidden) so it
+     can never clip; R6 bans overflow that clips content, not a scrollbar
+     on a debug-only block nobody but a developer ever sees. */
+  .thankyou-debug { max-height: 70vh; overflow-y: auto; text-align: left; width: 100%; box-sizing: border-box; }
+
   /* Gauge — conic-gradient exactly as specced, animated via a CSS custom
      property. Inner circle uses --surface-page (pure white), which now
      matches the page's own --white background (both pure white per
@@ -498,6 +992,18 @@
     background: conic-gradient(var(--accent) var(--gauge-pct), var(--ink-100) var(--gauge-pct));
   }
   .gauge-outer.animating { transition: --gauge-pct 1.1s cubic-bezier(.34,1.1,.64,1); }
+  /* T018: celebratory flourish fired once by js/screens/instantResult.js's
+     animateResultGauge() the instant its own count-up rAF loop finishes —
+     the count-up's duration/easing above are untouched; this only adds a
+     `.gauge-pulse` class after the fact, so it can never affect the
+     score reveal's timing. Ring-shadow radiates out from the accent
+     color and fades as the ring settles back to scale(1). */
+  @keyframes gaugeCompletePulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,197,60,.55); }
+    55% { transform: scale(1.045); box-shadow: 0 0 0 12px rgba(245,197,60,0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,197,60,0); }
+  }
+  .gauge-outer.gauge-pulse { animation: gaugeCompletePulse .6s cubic-bezier(.34,1.4,.64,1); }
   .gauge-inner {
     width: 152px; height: 152px;
     border-radius: 50%;
@@ -511,12 +1017,16 @@
     color: var(--text-strong);
     letter-spacing: -0.01em;
   }
-  .gauge-caption { font-family: 'Nunito', sans-serif; font-weight: 500; font-size: 13px; color: var(--text-muted); }
+  .gauge-caption { font-family: 'Nunito', sans-serif; font-weight: 500; font-size: 14px; color: var(--text-muted); }
 
   .result-label {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
     font-size: 22px;
+    /* TASK-4 fix (AC4): explicit line-height added so this computes
+       identically to every other screen's Heading step (it previously
+       relied on the font's own default, which isn't guaranteed equal). */
+    line-height: 1.3;
     text-align: center;
     color: var(--text-strong);
     letter-spacing: -0.005em;
@@ -527,7 +1037,10 @@
     border: 1.5px dashed var(--border-default);
     border-radius: var(--radius-lg);
     padding: 18px;
-    margin-bottom: 23px;
+    /* 16px rather than the 23px used elsewhere (e.g. .gauge-wrap) — a
+       small safety margin so the longest result copy still fits one
+       390x844 screen with room to spare. */
+    margin-bottom: 16px;
   }
   .locked-teaser-header {
     display: flex;
@@ -535,7 +1048,7 @@
     gap: 9px;
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-strong);
     margin-bottom: 12px;
   }
@@ -545,6 +1058,15 @@
      for the larger UI pass. */
   .skeleton-bar { height: 12px; background: var(--ink-100); border-radius: 5px; }
   .skeleton-bars { display: flex; flex-direction: column; gap: 9px; }
+
+  /* The email-capture form now lives inside the same locked-teaser
+     card (folded in to save vertical space) rather than its own
+     block below it — this divider is the only new rule, standing in
+     for the removed box's own border + margin-bottom. */
+  .locked-teaser-divider {
+    border-top: 1.5px dashed var(--border-default);
+    margin: 16px 0;
+  }
 
   @property --gauge-pct {
     syntax: '<percentage>';
@@ -562,6 +1084,26 @@
     .progress-fill { transition: none; }
     .gauge-outer.animating { transition: none; }
     ::view-transition-old(quiz-card), ::view-transition-new(quiz-card) { animation: none; }
+    /* T016 — accent-flip demographic screen: entrance/glow/shimmer become
+       instant/static, same pattern as every other animation above. */
+    .adhd-fade { animation: none; opacity: 1; }
+    .adhd-glow { animation: none; }
+    .adhd-shimmer { animation: none; }
+    /* T018: press-feedback transforms (all now unified to the same
+       -0.97 scale, see rules above) and the two new entrance/completion
+       flourishes all become instant/static here — .option:active and
+       .btn:active are pre-existing rules this task modified the scale
+       value of, so they're folded into this list now too rather than
+       left as a gap, per this task's "no exceptions" requirement. */
+    .adhd-opt:active, .adhd-gender-continue:active, .option:active, .btn:active, .topbar .back:active { transform: none; }
+    .char-pop-in { animation: none; opacity: 1; }
+    .gauge-outer.gauge-pulse { animation: none; }
+    /* thankYou screen: confetti burst, mascot float bob, and the
+       checkmark draw-in all become instant/static, same pattern as
+       every other animation above. */
+    .ty-confetti-dot { animation: none; opacity: 0; }
+    .ty-mascot-float { animation: none; }
+    .ty-check-path { animation: none; stroke-dashoffset: 0; }
   }
 </style>
 </head>

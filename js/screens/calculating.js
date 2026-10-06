@@ -40,7 +40,7 @@ export function renderCalculating() {
   calcMetricTargets = CALC_METRICS.map(() => 45 + Math.floor(Math.random() * 40));
   return `
     <div class="fade-in" style="text-align:center;">
-      <div class="calc-companion-icon">${poseThinkingSvg(74)}</div>
+      <div class="calc-companion-icon char-pop-in">${poseThinkingSvg(74)}</div>
       <h1 style="margin-bottom:7px;">Calculating your results</h1>
       <p class="lede centered small" id="calcCaption">Analyzing your answers…</p>
       <div style="text-align:left; margin-top:9px;">

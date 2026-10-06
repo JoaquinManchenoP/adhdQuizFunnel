@@ -49,7 +49,10 @@ export function track(event, props = {}) {
 
 // Order of the funnel, used for the `step` property so the dashboard
 // can sort screens without hard-coding names.
-const STEP_ORDER = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'emailCapture', 'thankYou'];
+// T017: the standalone emailCapture screen was folded into instantResult
+// (the email form now renders inline there instead of on its own step),
+// so it's removed from this ordering too.
+const STEP_ORDER = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'thankYou'];
 
 let lastScreenKey = null;
 let startedAt = null;
@@ -64,7 +67,7 @@ export function trackScreen(screen, qIndex) {
   const props = { screen, step: STEP_ORDER.indexOf(screen) };
   if (screen === 'question') {
     props.question_number = qIndex + 1;
-    // Zero-padded label ("Q01"…"Q21") so PostHog, which sorts breakdown
+    // Zero-padded label ("Q01"…"Q22") so PostHog, which sorts breakdown
     // values as text, lists questions in quiz order.
     props.question_label = `Q${String(qIndex + 1).padStart(2, '0')}`;
   }

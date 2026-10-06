@@ -8,7 +8,7 @@ export function renderQuestion(state) {
   const selected = state.answers[state.qIndex];
   return `
     <div class="fade-in">
-      <div class="question-text">${q.text}</div>
+      <div class="question-text question-text--tight">${q.text}</div>
       ${q.hint ? `<div class="question-hint">${q.hint}</div>` : ''}
       <div class="options">
         ${opts.map((opt, i) => `

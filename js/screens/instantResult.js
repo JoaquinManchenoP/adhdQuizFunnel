@@ -19,7 +19,7 @@ export function renderInstantResult(state) {
         </div>
       </div>
       <div class="result-label">${band.label}</div>
-      <p class="lede centered small">${band.copy} Your full breakdown shows which ADHD pattern your answers point to most.</p>
+      <p class="lede centered small">${band.copy}</p>
       <div class="locked-teaser">
         <div class="locked-teaser-header"><i data-lucide="lock" width="18" height="18"></i>Locked in your full breakdown</div>
         <div class="skeleton-bars">
@@ -27,10 +27,19 @@ export function renderInstantResult(state) {
           <div class="skeleton-bar" style="width:75%; background:var(--dataviz-coral);"></div>
           <div class="skeleton-bar" style="width:82%; background:var(--dataviz-teal);"></div>
         </div>
+        <div class="locked-teaser-divider"></div>
+        <p class="lede small centered" style="margin-bottom:12px;">Enter your email and we'll send it over now.</p>
+        <form onsubmit="submitEmail(event)">
+          <label class="field-label" for="emailInput">Email address</label>
+          <input type="email" id="emailInput" placeholder="you@email.com" required>
+          <div style="height:14px;"></div>
+          <button type="submit" class="btn primary">Send my results</button>
+        </form>
+        <div class="trust-row">
+          <i data-lucide="shield-check" width="17" height="17" color="var(--text-subtle)"></i>
+          <span>Occasional tips too. Unsubscribe anytime, no spam.</span>
+        </div>
       </div>
-      <button class="btn primary" onclick="goEmailCapture()">Get my free full results</button>
-      <div class="microcopy">Takes 10 seconds. No spam, ever.</div>
-      <div class="disclaimer">This self assessment is based on the structure of a validated adult ADHD screening tool but is not a diagnostic instrument and cannot diagnose ADHD or any other condition. It's intended to help you reflect on patterns worth discussing with a licensed healthcare provider. Only a qualified professional can provide an actual diagnosis.</div>
     </div>
   `;
 }
@@ -53,7 +62,12 @@ export function animateResultGauge(percent) {
     const eased = 1 - Math.pow(1 - t, 3);
     numEl.textContent = Math.round(eased * percent) + '%';
     if (t < 1) requestAnimationFrame(tick);
-    else numEl.textContent = percent + '%';
+    else {
+      numEl.textContent = percent + '%';
+      // T018: celebratory flourish fired only once the count-up above has
+      // fully finished — the count-up's own duration/easing are untouched.
+      gauge.classList.add('gauge-pulse');
+    }
   }
   requestAnimationFrame(tick);
 }

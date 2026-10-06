@@ -31,7 +31,7 @@ export function renderBreather(state) {
   const b = BREATHERS[state.breatherIndex];
   return `
     <div class="fade-in breather">
-      <div class="breather-icon">
+      <div class="breather-icon char-pop-in">
         <img class="breather-img" src="${b.image}" alt="${b.alt}">
       </div>
       <p class="breather-text">${b.message}</p>
