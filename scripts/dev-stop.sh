@@ -17,7 +17,7 @@ else
 fi
 
 # Belt-and-suspenders: make sure nothing is still bound to the dev ports.
-for PORT in 8888 3999 8080; do
+for PORT in 8888 3999 8080 8443; do
   LEFTOVER=$(lsof -tnP -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null)
   if [ -n "$LEFTOVER" ]; then
     kill $LEFTOVER 2>/dev/null

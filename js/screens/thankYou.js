@@ -34,7 +34,7 @@ const CONFETTI = [
 ];
 
 export function renderThankYou(state) {
-  const s = state.fullScoring();
+  const s = state.buildResultsReport();
   const debug = new URLSearchParams(location.search).has('debug');
   const email = state.submittedEmail;
   const subtext = email
@@ -86,7 +86,7 @@ export function renderThankYou(state) {
           </div>
         </div>
 
-        <button type="button" class="btn ty-retake adhd-fade" style="animation-delay:.54s;" onclick="location.reload()">Take the quiz again</button>
+        <button type="button" class="btn ty-retake adhd-fade" style="animation-delay:.54s;" onclick="restartQuiz()">Take the quiz again</button>
 
         ${debug ? `
         <div class="disclaimer thankyou-debug">
@@ -95,10 +95,12 @@ export function renderThankYou(state) {
           age_range: <strong>${state.selectedAge !== null ? state.AGE_RANGES[state.selectedAge] : 'not set'}</strong><br>
           diagnosis_status: <strong>${state.selectedDiagnosis !== null ? state.DIAGNOSIS_OPTIONS[state.selectedDiagnosis] : 'not set'}</strong><br>
           submitted_email: <strong>${email ? escapeHtml(email) : 'not set'}</strong><br>
+          scoring_version: <strong>${s.scoringVersion}</strong><br>
           subtype: <strong>${s.subtype}</strong><br>
-          total_score: <strong>${s.totalScore} / ${s.totalMax}</strong><br>
-          inattentive_pct: <strong>${Math.round(s.inattentivePct*100)}%</strong><br>
-          hyperactive_impulsive_pct: <strong>${Math.round(s.hyperImpulsivePct*100)}%</strong>
+          total_score: <strong>${s.totalScore} / ${s.totalMax} (${s.totalPct}%)</strong><br>
+          inattentive: <strong>${s.inattentive.pct}% — ${s.inattentive.label}</strong><br>
+          hyperactive_impulsive: <strong>${s.hyperImpulsive.pct}% — ${s.hyperImpulsive.label}</strong><br>
+          associated_patterns: <strong>${s.associated.pct}% — ${s.associated.label}</strong>
         </div>` : ''}
       </div>
     </div>

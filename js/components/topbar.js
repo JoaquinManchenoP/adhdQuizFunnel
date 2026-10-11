@@ -7,7 +7,7 @@
    ============================================================ */
 
 export function topbarHtml(state, showTitle) {
-  const hidden = (state.screen === 'genderSelect' || state.screen === 'thankYou' || state.screen === 'breather' || state.screen === 'calculating');
+  const hidden = (state.screen === 'genderSelect' || state.screen === 'thankYou' || state.screen === 'breather' || state.screen === 'calculating' || state.screen === 'sparkloop');
   return `
     <div class="topbar">
       <button class="back" onclick="goBack()" aria-label="Back" style="visibility:${hidden ? 'hidden' : 'visible'};">

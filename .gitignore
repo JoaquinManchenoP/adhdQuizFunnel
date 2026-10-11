@@ -6,5 +6,6 @@ beehiiv.txt
 .netlify-dev.log
 .dev-pids
 .live-server.log
+.ssl-proxy.log
 .DS_Store
 .claude/worktrees/

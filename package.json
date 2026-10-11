@@ -5,8 +5,12 @@
     "dev": "bash scripts/dev-start.sh",
     "dev:stop": "bash scripts/dev-stop.sh"
   },
+  "dependencies": {
+    "@netlify/blobs": "^10.7.13"
+  },
   "devDependencies": {
     "live-server": "^1.2.2",
+    "local-ssl-proxy": "^2.0.5",
     "netlify-cli": "^26.2.0"
   }
 }
