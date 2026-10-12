@@ -1,40 +1,70 @@
 # ADHD Quiz — Setup Guide
 
+A lead-gen quiz funnel: a 22-question ADHD self-check, an instant teaser
+score, an email-gated full results breakdown, a SparkLoop recommendations
+step, and a beehiiv newsletter subscription — all served as a static site
+plus one Netlify Function.
+
 ## What's in this folder
-- `index.html` — the quiz itself (frontend, all scoring logic runs here)
-- `netlify/functions/subscribe.js` — the server-side piece that talks to beehiiv (keeps your API key private)
-- `netlify.toml` — tells Netlify where to find the function
+- `index.html` + `js/` — the quiz itself. `js/main.js` is the entry point
+  (render loop, event handlers); `js/state.js` owns quiz state and all
+  scoring; `js/screens/*.js` and `js/components/*.js` render each screen;
+  `js/analytics.js` sends PostHog events.
+- `netlify/functions/subscribe.js` — server-side function that validates
+  the submitted email, writes a full raw record to Netlify Blobs, and
+  calls the beehiiv API to subscribe the reader (keeps the API key off
+  the client).
+- `netlify.toml` — tells Netlify where to find the function.
+- `BEEHIIV_SETUP.md` — step by step guide to the beehiiv custom fields and
+  the results-email automation.
+- `TESTING.md` — the repeatable test procedure for the scoring → Blobs →
+  beehiiv pipeline (mock mode first, then a live end-to-end check).
 
-## 1. Create two custom fields in beehiiv (do this first)
-In your beehiiv dashboard: **Settings → Custom Fields** → create:
-- `quiz_subtype` (text)
-- `quiz_score` (text or number)
-- `quiz_gender` (text)
-- `quiz_age_range` (text)
-- `quiz_diagnosis_status` (text)
-
-These names must match exactly — beehiiv silently discards any custom field sent to the API that it doesn't already recognize.
+## 1. Create the custom fields in beehiiv
+See `BEEHIIV_SETUP.md` Step 1 for the full, current list of field names —
+it must match exactly what `netlify/functions/subscribe.js` sends, or
+beehiiv silently drops the mismatched field.
 
 ## 2. Get your beehiiv API key and publication ID
-- API key: **Settings → Integrations → API** (create a key with `subscriptions:write` access — treat this like a password, never put it in the HTML file)
-- Publication ID: found in your publication settings, looks like `pub_xxxxxxxxxxxx`
+- API key: **Settings → Integrations → API** (create a key with
+  `subscriptions:write` access — treat this like a password, never commit
+  it or put it in client-side code)
+- Publication ID: found in your publication settings, looks like
+  `pub_xxxxxxxxxxxx`
 
 ## 3. Deploy to Netlify
-1. Push this whole folder to a GitHub repo (or drag-and-drop deploy it directly in the Netlify dashboard)
+1. Push this repo to GitHub (or drag-and-drop deploy it directly in the
+   Netlify dashboard)
 2. In Netlify: **New site from Git** → pick the repo
 3. Under **Site settings → Environment variables**, add:
    - `BEEHIIV_API_KEY` = your API key from step 2
    - `BEEHIIV_PUBLICATION_ID` = your publication ID from step 2
+   - `BEEHIIV_RESULTS_AUTOMATION_ID` (optional) — see `BEEHIIV_SETUP.md`
+     Step 4
 4. Deploy
 
 ## 4. Test it
-Visit your live URL with `?debug=1` at the end (e.g. `yoursite.netlify.app?debug=1`) — this shows you the computed subtype/score on the final screen so you can confirm the scoring is working before checking beehiiv. Remove `?debug=1` for the real link you share publicly — without it, the debug panel never shows.
+Follow `TESTING.md` end to end: a safe mock-mode dry run first (no real
+beehiiv writes), then a live verification against your real beehiiv
+account. Visiting with `?debug=1` shows the computed score/subtype/band on
+the thank-you screen so you can cross-check it against what beehiiv
+received — remove `?debug=1` from the link you actually share.
 
-After a test submission, check beehiiv's subscriber list — you should see the new subscriber with `quiz_subtype` and `quiz_score` populated in their custom fields. That's what your beehiiv automation will trigger off of to send the right report/starter guide.
+## 5. Build the beehiiv automation
+Once custom fields are confirmed correct (`BEEHIIV_SETUP.md` Step 2),
+follow Steps 3–4 there to build the "Your ADHD Quiz Results" automation and
+point the function at it via `BEEHIIV_RESULTS_AUTOMATION_ID`. This is what
+sends each subscriber their personalized results email.
 
-## 5. Set up the beehiiv automation
-In beehiiv: create an automation triggered by a segment where `quiz_subtype` equals each value (`Inattentive-leaning`, `Hyperactive-Impulsive-leaning`, `Combined`), and have each one send the matching report + starter guide email. This is the piece that makes personalization automatic — no manual work per subscriber.
+## Local development
+`npm run dev` starts the full local stack (Netlify Functions + a
+live-reload static server + an HTTPS passthrough for testing SparkLoop's
+redirect locally) — see `scripts/dev-start.sh` for exactly what it runs
+and why. `npm run dev:stop` stops it.
 
 ## Notes
-- If you'd rather host on Vercel instead of Netlify, the function needs to move to `/api/subscribe.js` using Vercel's serverless function format instead — let me know if you want that version.
-- Swap the brand name, colors, and copy in `index.html` before this goes live — right now it's placeholder ("The Clarity Check").
+- If you'd rather host on Vercel instead of Netlify, the function needs to
+  move to `/api/subscribe.js` using Vercel's serverless function format.
+- The dev-only screen jumper (`?dev=1`, bottom of the page) lets you skip
+  straight to any screen for testing — it's gated so real visitors never
+  see it, but is meant to be deleted before a final launch.

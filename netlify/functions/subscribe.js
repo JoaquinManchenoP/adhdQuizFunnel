@@ -57,12 +57,23 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
   }
 
-  const { email, subtype, score, report, gender, ageRange, diagnosisStatus, utm_source, utm_medium, utm_campaign } = payload;
+  let { email, subtype, score, report, gender, ageRange, diagnosisStatus, utm_source, utm_medium, utm_campaign } = payload;
 
-  if (!email || typeof email !== 'string') {
+  // Pragmatic RFC-5322-ish check (not a full spec parser — good enough to
+  // reject obvious garbage without rejecting real addresses). The native
+  // type="email" check on the form already catches most of this client
+  // side, but that's trivially bypassable (devtools, a direct POST), so
+  // the server is the actual gate.
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  email = typeof email === 'string' ? email.trim() : email;
+  if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
     console.error('[subscribe] ❌ missing/invalid email in payload:', payload);
     return { statusCode: 400, body: JSON.stringify({ error: 'A valid email is required' }) };
   }
+  // Keep the raw payload (read directly by saveResultRecord below) in
+  // sync with the trimmed value above, so the Blobs record never stores
+  // stray leading/trailing whitespace the beehiiv call itself no longer has.
+  payload.email = email;
 
   console.log(`[subscribe] received submission — email: ${email}, subtype: ${subtype || 'Unknown'}, score: ${score ?? 'n/a'}`);
 
