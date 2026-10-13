@@ -29,15 +29,43 @@ export const BREATHERS = [
 
 export function renderBreather(state) {
   const b = BREATHERS[state.breatherIndex];
+  // Pulsing skeleton sits behind the <img> (see index.html's
+  // .breather-img-skeleton) and covers the time before the image has
+  // actually loaded/decoded — index.html's <head> also preloads all 5
+  // of these well ahead of time, so in practice this skeleton is only
+  // ever visible briefly, if at all. The img starts at opacity:0 (CSS)
+  // and only fades in once one of these two handlers fires: `loaded`
+  // triggers the real fade-in; the error path just hides the skeleton
+  // so a broken image doesn't leave a permanently-pulsing placeholder
+  // behind it. decoding="async" + the `complete` check below handle the
+  // case where the browser serves this <img> from cache so fast the
+  // 'load' event has effectively already fired by the time this markup
+  // is parsed and the element exists.
   return `
     <div class="fade-in breather">
       <div class="breather-icon char-pop-in">
-        <img class="breather-img" src="${b.image}" alt="${b.alt}">
+        <div class="breather-img-skeleton"></div>
+        <img class="breather-img" src="${b.image}" alt="${b.alt}" loading="eager" decoding="async"
+          onload="this.classList.add('loaded'); this.previousElementSibling.classList.add('hide');"
+          onerror="this.previousElementSibling.classList.add('hide');">
       </div>
       <p class="breather-text">${b.message}</p>
       <div class="breather-timer-track"><div class="breather-timer-fill" id="breatherTimerFill" style="background:${b.solid};"></div></div>
     </div>
   `;
+}
+
+// Covers the cache-hit race above: by the time this runs (right after
+// render() sets #card.innerHTML — see js/main.js), a cached image may
+// already be `.complete` with its 'load' event having fired before any
+// handler existed to catch it, which would otherwise leave it stuck at
+// opacity:0 behind an endlessly-pulsing skeleton forever.
+export function ensureBreatherImageVisible() {
+  const img = document.querySelector('.breather-img');
+  if (img && img.complete) {
+    img.classList.add('loaded');
+    if (img.previousElementSibling) img.previousElementSibling.classList.add('hide');
+  }
 }
 
 export function animateBreatherTimer() {

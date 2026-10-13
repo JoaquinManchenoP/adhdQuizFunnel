@@ -27,7 +27,7 @@ import { progressBlockHtml } from './components/progress.js';
 import { renderGenderSelect } from './screens/genderSelect.js';
 import { renderAgeSelect } from './screens/ageSelect.js';
 import { renderDiagnosisStatus } from './screens/diagnosisStatus.js';
-import { renderBreather, animateBreatherTimer, BREATHERS } from './screens/breather.js';
+import { renderBreather, animateBreatherTimer, ensureBreatherImageVisible, BREATHERS } from './screens/breather.js';
 import { renderQuestion } from './screens/question.js';
 import { renderCalculating, animateCalculatingScreen } from './screens/calculating.js';
 import { renderInstantResult, animateResultGauge } from './screens/instantResult.js';
@@ -151,6 +151,11 @@ function render() {
     const percent = Math.round((State.partAScore() / 24) * 100);
     setTimeout(() => animateResultGauge(percent), 200);
   }
+  // Single choke point every breather entry passes through (the normal
+  // quiz flow via selectAnswer(), the dev-panel jumper, and a restored
+  // mid-breather session alike) — see breather.js's own note on why this
+  // is needed even with the <head> preload hints in place.
+  if (State.screen === 'breather') ensureBreatherImageVisible();
 }
 
 // T016: the accent-flip demographic screen (genderSelect) is always

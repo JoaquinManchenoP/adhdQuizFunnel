@@ -32,6 +32,19 @@
 <link rel="preconnect" href="https://js.sparkloop.app">
 <link rel="preconnect" href="https://script-settings.sparkloop.app">
 <link rel="preconnect" href="https://dash.sparkloop.app" crossorigin>
+<!-- Breather screens (js/screens/breather.js) each show one large
+     illustration for only ~4s before auto-advancing — low priority so
+     these don't compete with anything on the critical path, but kicked
+     off this early so by the time a visitor reaches even the FIRST
+     breather (after only 4 of 22 questions) the bytes are already in
+     flight. The onload/onerror skeleton fallback in breather.js's own
+     markup covers the case this hasn't finished (slow connection, very
+     fast quiz-taker) — this preload just makes that case rare. -->
+<link rel="preload" as="image" href="assets/breathers/breather-1-overwhelm.png" fetchpriority="low">
+<link rel="preload" as="image" href="assets/breathers/breather-2-reflection.png" fetchpriority="low">
+<link rel="preload" as="image" href="assets/breathers/breather-3-progress.png" fetchpriority="low">
+<link rel="preload" as="image" href="assets/breathers/breather-4-community.png" fetchpriority="low">
+<link rel="preload" as="image" href="assets/breathers/breather-5-almost-there.png" fetchpriority="low">
 <!-- PostHog analytics. Privacy settings: no cookies/localStorage
      (persistence: 'memory'), no session recording, no autocapture of
      clicks/inputs. Quiz answers and emails are never sent — only the
@@ -568,11 +581,40 @@
     padding: 9px 0 14px;
   }
   .breather-icon {
+    position: relative;
     width: 240px; height: 240px;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 28px;
   }
+  /* Placeholder shown under the <img> while its (often 1MB+) source is
+     still loading — without this, a slow/first-visit load left the
+     240x240 slot flatly empty until the image popped in all at once.
+     Sits behind the img (z-index) and fades out via its own opacity
+     transition once breather.js's onload/onerror handler marks the img
+     `.loaded` — see that file for the handler itself. */
+  .breather-img-skeleton {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    background: var(--track);
+    z-index: 0;
+    animation: breatherSkeletonPulse 1.4s ease-in-out infinite;
+    transition: opacity 0.3s ease;
+  }
+  /* .hide (toggled by breather.js once the <img> loads/errors) has to
+     turn the animation off, not just set opacity:0 — a *running*
+     CSS animation keeps winning the cascade over a plain opacity value
+     every frame (animations beat the base style regardless of
+     specificity), so a bare inline opacity:0 was silently overridden
+     back to ~1 on literally every tick and the skeleton never actually
+     went away. Stopping the animation here is what lets the opacity
+     transition below actually stick. */
+  .breather-img-skeleton.hide { animation: none; opacity: 0; }
+  @keyframes breatherSkeletonPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @media (prefers-reduced-motion: reduce) { .breather-img-skeleton { animation: none; } }
   .breather-img {
+    position: relative;
+    z-index: 1;
     display: block;
     max-width: 100%; max-height: 100%;
     /* contain, not cover — every source image keeps its full, uncropped
@@ -581,7 +623,14 @@
        than cropped to fill it. */
     object-fit: contain;
     border-radius: var(--radius-lg);
+    /* Starts invisible and fades in only once actually loaded/decoded
+       (see breather.js's onload handler) — replaces the old
+       pop-in-the-instant-bytes-arrive behavior, which read as a jank/
+       flash on a slow connection. */
+    opacity: 0;
+    transition: opacity 0.35s ease;
   }
+  .breather-img.loaded { opacity: 1; }
   .breather-text {
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
