@@ -28,7 +28,6 @@ export function renderInstantResult(state) {
           <div class="skeleton-bar" style="width:82%; background:var(--dataviz-teal);"></div>
         </div>
         <div class="locked-teaser-divider"></div>
-        <p class="lede small centered" style="margin-bottom:12px;">Enter your email and we'll send it over now.</p>
         <form onsubmit="submitEmail(event)">
           <label class="field-label" for="emailInput">Email address</label>
           <input type="email" id="emailInput" placeholder="you@email.com" required>
