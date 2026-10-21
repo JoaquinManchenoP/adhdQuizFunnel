@@ -21,7 +21,7 @@ export function renderInstantResult(state) {
       <div class="result-label">${band.label}</div>
       <p class="lede centered small">${band.copy}</p>
       <div class="locked-teaser">
-        <div class="locked-teaser-header"><i data-lucide="lock" width="18" height="18"></i>Locked in your full breakdown</div>
+        <div class="locked-teaser-header"><i data-lucide="lock" width="18" height="18"></i>Get the full breakdown</div>
         <div class="skeleton-bars">
           <div class="skeleton-bar" style="width:90%; background:var(--accent);"></div>
           <div class="skeleton-bar" style="width:75%; background:var(--dataviz-coral);"></div>
@@ -39,7 +39,9 @@ export function renderInstantResult(state) {
           <i data-lucide="shield-check" width="17" height="17" color="var(--text-subtle)"></i>
           <span>Occasional tips too. Unsubscribe anytime, no spam.</span>
         </div>
+        <p style="font-family:'Nunito',sans-serif; font-weight:500; font-size:14px; color:var(--text-subtle); text-align:center; margin:10px 0 0;">This is a self-assessment, not a diagnosis.</p>
       </div>
+      <p class="disclaimer">This quiz is for informational and educational purposes only. It is not a medical device and does not provide a medical diagnosis. A high score does not mean you have ADHD, and a low score does not rule it out — only a licensed healthcare professional can diagnose ADHD or any other condition. Please consult a qualified provider if you have concerns about your mental health.</p>
     </div>
   `;
 }

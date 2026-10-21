@@ -1144,6 +1144,24 @@
     margin: 16px 0;
   }
 
+  /* Formal fine-print disclaimer, instantResult only — sits below the
+     email-capture card, caption type-step per the scale note above
+     (.disclaimer was already reserved there, now actually used).
+     Deliberately plainer than .trust-row (no icon, tighter line-height,
+     left-aligned like real terms copy) so it reads as legal fine print
+     rather than another friendly aside. */
+  .disclaimer {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-subtle);
+    text-align: left;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1.5px solid var(--border-subtle);
+  }
+
   @property --gauge-pct {
     syntax: '<percentage>';
     inherits: false;
