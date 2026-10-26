@@ -180,6 +180,61 @@ function domainReport(idxs, label) {
   return { score, max, pct, ...domainBand(pct, label) };
 }
 
+/* ---------------- Pattern scoring (5-pattern breakdown) ----------------
+   Tags each of the 22 questions to exactly one of five executive-function
+   -linked patterns (independent of the inattentive/hyperactive-impulsive/
+   associated domains above, which stay untouched). Powers instantResult's
+   new pre-email pattern indicator and rides along inside
+   buildResultsReport() below so the post-email results screen and the
+   beehiiv payload can use it later without a second scoring pass. */
+export const PATTERN_LABELS = {
+  time: "time blindness",
+  overload: "executive overload",
+  impulsivity: "impulsivity",
+  paralysis: "task paralysis",
+  emotion: "emotional dysregulation",
+};
+export const PATTERN_DESCRIPTIONS = {
+  time: "You often underestimate how long things take, lose track of time while working, and find it hard to plan for deadlines that aren't immediate.",
+  overload: "You find it hard to prioritize when several things need attention at once, and large or unstructured tasks tend to stall before they start.",
+  impulsivity: "You often act or speak before fully thinking things through, and find it hard to pause when something grabs your attention.",
+  paralysis: "You find it hard to start tasks that aren't urgent or interesting, even when they matter, and tend to rely on deadlines to get going.",
+  emotion: "Your emotional reactions tend to be stronger and last longer than the situation calls for, and they can be hard to bring back down.",
+};
+// Question index -> pattern. Every index 0-21 appears in exactly one list.
+const PATTERN_MAP = {
+  time: [13, 17, 21],
+  overload: [1, 8, 9, 10, 11, 14],
+  impulsivity: [3, 4, 5, 19],
+  paralysis: [0, 2, 6],
+  emotion: [7, 12, 15, 16, 18, 20],
+};
+// Tie-break order when two+ patterns share the top %.
+const PATTERN_PRIORITY = ["time", "paralysis", "overload", "emotion", "impulsivity"];
+
+export function buildPatternReport() {
+  const pcts = {};
+  Object.keys(PATTERN_MAP).forEach((key) => {
+    const idxs = PATTERN_MAP[key];
+    const max = domainMax(idxs);
+    pcts[key] = max ? Math.round((domainScore(idxs) / max) * 100) : 0;
+  });
+  let primary = PATTERN_PRIORITY[0];
+  PATTERN_PRIORITY.forEach((key) => { if (pcts[key] > pcts[primary]) primary = key; });
+  const rest = PATTERN_PRIORITY.filter((key) => key !== primary);
+  let secondary = rest[0];
+  rest.forEach((key) => { if (pcts[key] > pcts[secondary]) secondary = key; });
+  return { pcts, primary, secondary };
+}
+
+// Overall-% -> level label, used by instantResult's new indicator.
+export function overallLevel(pct) {
+  if (pct >= 70) return "High";
+  if (pct >= 55) return "Medium-high";
+  if (pct >= 40) return "Medium";
+  return "Low";
+}
+
 export function buildResultsReport() {
   const inattentiveIdx = [0,1,2,6,8,9,10,11];
   const hyperImpulsiveIdx = [3,4,5,7];
@@ -209,5 +264,9 @@ export function buildResultsReport() {
     subtype,
     totalScore, totalMax, totalPct,
     inattentive, hyperImpulsive, associated,
+    // Additive: the 5-pattern breakdown (see buildPatternReport() above).
+    // Existing fields above are untouched, so nothing already reading
+    // this report breaks from gaining a `pattern` key.
+    pattern: buildPatternReport(),
   };
 }

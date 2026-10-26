@@ -918,7 +918,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* Centers short content (thankYou.js) exactly as before. But plain
+       `center` on an overflowing flex container clips content off BOTH
+       the top and bottom edges with no way to scroll to it — results.js's
+       expanded breakdown can now be taller than the viewport, so that
+       bug became reachable. `safe center` behaves identically to `center`
+       whenever content fits, and only falls back to top-aligned (fully
+       scrollable) once it doesn't — same "old value, then the modern
+       one" fallback pattern as the dvh/vh pair in body's rule above, for
+       browsers that don't understand the `safe` keyword. */
     justify-content: center;
+    justify-content: safe center;
     text-align: center;
     padding: 24px;
     background: var(--white);
@@ -1142,6 +1152,52 @@
   .locked-teaser-divider {
     border-top: 1.5px dashed var(--border-default);
     margin: 16px 0;
+  }
+
+  /* Results screen (js/screens/results.js) — per-trait breakdown rows,
+     the "unlocked" counterpart to the teaser's .skeleton-bars above:
+     same card shell as .ty-next-row, but with a real colored fill bar
+     sized to that trait's actual percent instead of a flat gray mock. */
+  .result-trait-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 4px 0 22px 0;
+  }
+  .result-trait-row {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    text-align: left;
+  }
+  .result-trait-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-strong);
+    margin-bottom: 8px;
+  }
+  .result-trait-track {
+    height: 10px;
+    background: var(--ink-100);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .result-trait-fill { height: 100%; border-radius: 5px; }
+  .result-trait-copy {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-subtle);
+    margin: 9px 0 0;
   }
 
   /* Formal fine-print disclaimer, instantResult only — sits below the

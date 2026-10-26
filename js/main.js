@@ -33,6 +33,7 @@ import { renderCalculating, animateCalculatingScreen } from './screens/calculati
 import { renderInstantResult, animateResultGauge } from './screens/instantResult.js';
 import { renderSparkloop } from './screens/sparkloop.js';
 import { renderThankYou } from './screens/thankYou.js';
+import { renderResults } from './screens/results.js';
 import { prefersReducedMotion, hydrateIcons } from './utils.js';
 import { poseThinkingSvg } from './components/companion.js';
 import { track, trackScreen, trackQuizStarted, secondsSinceStart, utm } from './analytics.js';
@@ -68,7 +69,7 @@ function logMilestone(label) {
 // elsewhere, or insert a new screen), just edit this array — each screen
 // just needs to call advancePostResults('itsOwnName') to move to
 // whatever comes next.
-const POST_RESULTS_SEQUENCE = ['sparkloop', 'thankYou'];
+const POST_RESULTS_SEQUENCE = ['sparkloop', 'results'];
 function advancePostResults(fromScreen) {
   const next = POST_RESULTS_SEQUENCE[POST_RESULTS_SEQUENCE.indexOf(fromScreen) + 1] || 'thankYou';
   State.setScreen(next);
@@ -91,6 +92,7 @@ function screenBodyHtml() {
   if (State.screen === 'instantResult') return renderInstantResult(State);
   if (State.screen === 'sparkloop') return renderSparkloop(State);
   if (State.screen === 'thankYou') return renderThankYou(State);
+  if (State.screen === 'results') return renderResults(State);
 }
 
 function render() {
@@ -113,7 +115,7 @@ function render() {
   // (~43px of dead space) even though topbarHtml() already hides it, which
   // blocked true vertical centering. See js/screens/thankYou.js's own
   // `.thankyou-screen` wrapper for the centering technique.
-  const html = (State.screen === 'genderSelect' || State.screen === 'thankYou')
+  const html = (State.screen === 'genderSelect' || State.screen === 'thankYou' || State.screen === 'results')
     ? screenBodyHtml()
     : topbarHtml(State, showTitle) + progressBlockHtml(State) + screenBodyHtml();
   const apply = () => { document.getElementById('card').innerHTML = html; hydrateIcons(); };
@@ -347,16 +349,40 @@ function initDevPanel() {
   // never see or reserve layout space for this panel now.
   if (!new URLSearchParams(location.search).has('dev')) return;
   const panel = document.getElementById('devPanel');
-  const screens = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'sparkloop', 'thankYou'];
+  const screens = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'sparkloop', 'results', 'thankYou'];
   panel.style.display = 'flex';
-  panel.innerHTML = screens.map(s =>
+  const fakeBtn = `<button onclick="devFillFakeData()" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#8a5a00;color:#fff;cursor:pointer;">🎲 fake answers</button>`;
+  panel.innerHTML = fakeBtn + screens.map(s =>
     `<button onclick="devJumpTo('${s}')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;">${s}</button>`
   ).join('');
+  // This panel is position:fixed with no reserved layout space (TASK-2
+  // deliberately removed body's old always-on 92px reservation once this
+  // got gated behind ?dev=1 — see the comments at the bottom of
+  // index.html). That's correct for real visitors, but in dev mode it
+  // means the panel sits on top of whatever's at the bottom of a tall
+  // screen's content when scrolled all the way down (e.g. results.js's
+  // "Take the quiz again" button/disclaimer). Dev-only fix: reserve
+  // exactly the panel's own rendered height (it now spans more rows
+  // than before with the fake-answers button added) as bottom padding,
+  // only while ?dev=1 is set.
+  const stage = document.querySelector('.stage');
+  if (stage) stage.style.paddingBottom = panel.offsetHeight + 'px';
 }
 function devJumpTo(targetScreen) {
   State.setScreen(targetScreen);
   if (targetScreen === 'question') State.setQIndex(0);
   if (targetScreen === 'breather') State.setBreatherIndex(0);
+  render();
+}
+// Dev-only: randomizes every answer (respecting each question's own max —
+// yes/no questions cap at 1, the 5-point ones at 4) so instantResult/
+// results have real-looking data to preview instead of a blank 0%.
+function devFillFakeData() {
+  State.QUESTIONS.forEach((q, i) => {
+    const max = (q.options ? q.options.length : State.OPTIONS.length) - 1;
+    State.setAnswer(i, Math.floor(Math.random() * (max + 1)));
+  });
+  State.setSubmittedEmail('dev@example.com');
   render();
 }
 
@@ -381,6 +407,7 @@ window.goBack = goBack;
 window.continueFromSparkloop = continueFromSparkloop;
 window.submitEmail = submitEmail;
 window.devJumpTo = devJumpTo;
+window.devFillFakeData = devFillFakeData;
 window.restartQuiz = restartQuiz;
 
 // Restore progress from a previous load in this tab (if any) BEFORE the
@@ -400,7 +427,7 @@ State.restore();
 // even started loading, which bridges that reload's own blank gap.
 const isSparkloopReturn = new URLSearchParams(location.search).get('from') === 'sparkloop';
 if (isSparkloopReturn) {
-  State.setScreen('thankYou');
+  State.setScreen('results');
 }
 
 render();

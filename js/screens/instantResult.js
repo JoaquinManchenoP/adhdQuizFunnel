@@ -7,7 +7,17 @@ import { prefersReducedMotion } from '../utils.js';
 export function renderInstantResult(state) {
   const score = state.partAScore();
   const percent = Math.round((score / 24) * 100);
-  const band = state.partABand(percent);
+  const patternReport = state.buildPatternReport();
+  const primaryPct = patternReport.pcts[patternReport.primary];
+  const primaryTerm = state.PATTERN_LABELS[patternReport.primary];
+  const patternBlock = percent >= 40
+    ? `
+      <div class="result-label adhd-fade">Your answers show ${primaryPct >= 70 ? 'strong' : 'some'} signs of ${primaryTerm}</div>
+      <p class="lede centered small adhd-fade">${state.PATTERN_DESCRIPTIONS[patternReport.primary]}</p>
+    `
+    : `
+      <p class="lede centered small adhd-fade">Your answers don't show strong signs of the patterns commonly associated with ADHD.</p>
+    `;
   return `
     <div class="fade-in">
       <div class="gauge-wrap">
@@ -18,8 +28,8 @@ export function renderInstantResult(state) {
           </div>
         </div>
       </div>
-      <div class="result-label">${band.label}</div>
-      <p class="lede centered small">${band.copy}</p>
+      ${patternBlock}
+
       <div class="locked-teaser">
         <div class="locked-teaser-header"><i data-lucide="lock" width="18" height="18"></i>Get the full breakdown</div>
         <div class="skeleton-bars">

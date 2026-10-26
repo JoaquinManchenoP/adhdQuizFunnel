@@ -52,7 +52,7 @@ export function track(event, props = {}) {
 // T017: the standalone emailCapture screen was folded into instantResult
 // (the email form now renders inline there instead of on its own step),
 // so it's removed from this ordering too.
-const STEP_ORDER = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'thankYou'];
+const STEP_ORDER = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'results', 'thankYou'];
 
 let lastScreenKey = null;
 let startedAt = null;
