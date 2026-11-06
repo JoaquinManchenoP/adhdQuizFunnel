@@ -227,6 +227,49 @@ export function buildPatternReport() {
   return { pcts, primary, secondary };
 }
 
+// Dev-only: zeroes every answer, then maxes out one pattern's own
+// questions so it's guaranteed to come out primary (100% vs 0% for the
+// rest) — lets the dev panel jump straight to a chosen pattern's write-up
+// instead of relying on devFillFakeData()'s random roll to land on it.
+export function devForcePrimaryPattern(key) {
+  QUESTIONS.forEach((q, i) => {
+    const max = (q.options ? q.options.length : OPTIONS.length) - 1;
+    setAnswer(i, PATTERN_MAP[key].includes(i) ? max : 0);
+  });
+}
+
+// Dev-only: reaches the results-page ROUTER's 4 actual outcomes
+// ('inattentive' | 'hyperactive-impulsive' | 'combined' | 'low' — see
+// js/screens/results.js + results/config.js's computeResultType()).
+// devForcePrimaryPattern() above maxes only 3-6 of 22 questions, which
+// keeps overall% under the router's 40% floor and always lands on
+// 'low' — not useful for reaching the type-based results page. This
+// sets every answer to a 60%-of-max baseline first (clears 40% with
+// room to spare), then biases the inattentive-linked patterns
+// (time+overload+paralysis) vs. the hyperactive-linked one
+// (impulsivity) to steer the router's inattentiveScore/hyperactiveScore
+// comparison to the requested outcome.
+export function devForceType(typeKey) {
+  const setGroup = (idxs, frac) => idxs.forEach((i) => {
+    const q = QUESTIONS[i];
+    const max = (q.options ? q.options.length : OPTIONS.length) - 1;
+    setAnswer(i, Math.round(max * frac));
+  });
+  const allIdx = QUESTIONS.map((_, i) => i);
+  const inattentiveIdx = [...PATTERN_MAP.time, ...PATTERN_MAP.overload, ...PATTERN_MAP.paralysis];
+  const hyperactiveIdx = PATTERN_MAP.impulsivity;
+  if (typeKey === 'low') { setGroup(allIdx, 0.05); return; }
+  setGroup(allIdx, 0.6);
+  // 0.45 (not near-zero) for the "losing" group — enough of a gap below
+  // the "winning" group's 1.0 to decide the comparison, but still high
+  // enough that dropping 12-16 of 22 answers to it doesn't drag overall%
+  // back under the router's 40% floor (emotion's 6 questions are left
+  // at the 0.6 baseline throughout, since they don't feed either score).
+  if (typeKey === 'inattentive') { setGroup(inattentiveIdx, 1); setGroup(hyperactiveIdx, 0.45); }
+  else if (typeKey === 'hyperactive-impulsive') { setGroup(hyperactiveIdx, 1); setGroup(inattentiveIdx, 0.45); }
+  else if (typeKey === 'combined') { setGroup(inattentiveIdx, 1); setGroup(hyperactiveIdx, 1); }
+}
+
 // Overall-% -> level label, used by instantResult's new indicator.
 export function overallLevel(pct) {
   if (pct >= 70) return "High";

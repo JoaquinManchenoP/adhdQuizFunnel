@@ -352,7 +352,25 @@ function initDevPanel() {
   const screens = ['genderSelect', 'ageSelect', 'diagnosisStatus', 'question', 'breather', 'calculating', 'instantResult', 'sparkloop', 'results', 'thankYou'];
   panel.style.display = 'flex';
   const fakeBtn = `<button onclick="devFillFakeData()" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#8a5a00;color:#fff;cursor:pointer;">🎲 fake answers</button>`;
-  panel.innerHTML = fakeBtn + screens.map(s =>
+  // Deterministic version of the dice above — jumps straight to
+  // instantResult (the email-gate teaser) with a chosen pattern
+  // guaranteed primary, instead of re-rolling until it happens to come
+  // up. Not useful for the post-email results page below — that's a
+  // different scoring axis (type, not pattern), see typeBtns.
+  const patternBtns = Object.keys(State.PATTERN_LABELS).map((key) =>
+    `<button onclick="devForcePattern('${key}')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#2d5a8a;color:#fff;cursor:pointer;">teaser → ${State.PATTERN_LABELS[key]}</button>`
+  ).join('');
+  // Reaches the results-page ROUTER's 4 actual outcomes (results.js ->
+  // results/config.js's computeResultType()) — devForcePattern above
+  // only maxes 3-6 of 22 answers, which keeps overall% under the
+  // router's 40% floor and always lands on 'low', so it can't reach the
+  // other 3. State.devForceType() sets a realistic 60%-of-max baseline
+  // across all 22 answers first, then biases toward whichever outcome.
+  const TYPE_BTN_KEYS = ['inattentive', 'hyperactive-impulsive', 'combined', 'low'];
+  const typeBtns = TYPE_BTN_KEYS.map((key) =>
+    `<button onclick="devForceType('${key}')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#8a2d5a;color:#fff;cursor:pointer;">results → ${key}</button>`
+  ).join('');
+  panel.innerHTML = fakeBtn + patternBtns + typeBtns + screens.map(s =>
     `<button onclick="devJumpTo('${s}')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;">${s}</button>`
   ).join('');
   // This panel is position:fixed with no reserved layout space (TASK-2
@@ -385,6 +403,25 @@ function devFillFakeData() {
   State.setSubmittedEmail('dev@example.com');
   render();
 }
+// Dev-only: jumps to instantResult (the pre-email teaser) with the given
+// pattern guaranteed primary (State.devForcePrimaryPattern maxes its
+// questions, zeroes the rest) — for reliably previewing one pattern's
+// teaser headline on demand.
+function devForcePattern(key) {
+  State.devForcePrimaryPattern(key);
+  State.setScreen('instantResult');
+  render();
+}
+// Dev-only: jumps to the post-email results page with the given TYPE
+// (inattentive | hyperactive-impulsive | combined | low) guaranteed,
+// via State.devForceType() — see that function's own comment for why
+// devForcePattern above can't reach these.
+function devForceType(key) {
+  State.devForceType(key);
+  State.setSubmittedEmail('dev@example.com');
+  State.setScreen('results');
+  render();
+}
 
 // "Take the quiz again" on the thank-you screen — must clear the saved
 // progress before reloading, or restore() below would just put the
@@ -408,6 +445,8 @@ window.continueFromSparkloop = continueFromSparkloop;
 window.submitEmail = submitEmail;
 window.devJumpTo = devJumpTo;
 window.devFillFakeData = devFillFakeData;
+window.devForcePattern = devForcePattern;
+window.devForceType = devForceType;
 window.restartQuiz = restartQuiz;
 
 // Restore progress from a previous load in this tab (if any) BEFORE the
