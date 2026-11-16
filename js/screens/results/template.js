@@ -19,7 +19,7 @@
    tinted banner. Content/data schema is unchanged; see the report.
    ============================================================ */
 
-import { PRICES, UNLOCK_LABELS, DISCLAIMER, CREDIBILITY_LINE, BAR_COLORS, levelFor } from './config.js';
+import { PRICES, UNLOCK_LABELS, DISCLAIMER, BAR_COLORS, levelFor } from './config.js';
 import { getOrCreateResultId, saveResultSnapshot, buildResultUrl, logResultEvent, isSharedModeUrl } from './storage.js';
 import { injectResultsStyles } from './styles.js';
 
@@ -44,8 +44,8 @@ function sub(tpl, typeKey, typeLabel) {
 
 const SECTION_DEFS = [
   { id: 'hero', toc: false, band: 'hero' },
-  { id: 'save', toc: false, band: 'a', heading: 'Save your results' },
   { id: 'areas', toc: true, num: 1, band: 'b', tocLabel: 'Your 5 areas', heading: 'Your results across 5 areas', lockedHeading: 'How your top areas connect', product: 'personal_profile' },
+  { id: 'save', toc: false, band: 'a', heading: 'Save your results' },
   { id: 'type', toc: true, num: 2, band: 'a', tocLabel: 'Your type', headingTpl: 'What is the {type} type of ADHD?', lockedHeadingTpl: 'Why the {type} type is often missed', product: 'type_guide' },
   { id: 'special', toc: true, num: 3, band: 'b', tocLabel: 'Why missed', lockedHeading: 'Going deeper', product: 'type_guide' },
   { id: 'work', toc: true, num: 4, band: 'a', tocLabel: 'Work & study', headingTpl: 'How the {type} type shows up at work and study', lockedHeading: 'What helps at work', product: 'type_guide' },
@@ -57,7 +57,11 @@ const SECTION_DEFS = [
   { id: 'share', toc: false, band: 'b', heading: 'Save or share your results' },
 ];
 
+// Disabled for now, per explicit user request — every call site except
+// the header's floating hero illustration (brought back per follow-up
+// request) renders nothing.
 function illustrationSlot(sectionId, size) {
+  if (sectionId !== 'hero') return '';
   const cls = size ? `rp-illustration rp-illustration-${size}` : 'rp-illustration';
   return `<div class="${cls}" aria-hidden="true">illustration: ${escapeHtml(sectionId)}</div>`;
 }
@@ -119,6 +123,15 @@ function listBlock(items) {
   return featureGrid(items, 'chip');
 }
 
+// Plain neutral 2-column card grid (no icon, thin top-border divider) —
+// matches a reference layout the user supplied, used only for the type
+// section's list_items (renderSimpleSection below), not listBlock's
+// other callers (emotions' quoted list stays on the icon/chip style).
+function plainCardGrid(items) {
+  if (!items || !items.length) return '';
+  return `<div class="rp-plain-grid">${items.map((i) => `<div class="rp-plain-card"><span>${escapeHtml(i)}</span></div>`).join('')}</div>`;
+}
+
 function strengthsChallenges(strengths, challenges) {
   return `
     <h3 class="rp-sub-h3">Strengths</h3>
@@ -135,7 +148,16 @@ function strengthsChallenges(strengths, challenges) {
 function lockedBlock({ heading, firstLine, product, typeKey, resultId }) {
   const dataProduct = product === 'type_guide' ? `type_guide_${typeKey}` : product;
   const label = UNLOCK_LABELS[product];
-  const placeholders = ['Unlocks after purchase', 'Unlocks after purchase', 'Unlocks after purchase', 'Unlocks after purchase'];
+  // Varied lengths (not 4 identical copies) so the blurred shapes read
+  // like real, varied-length sentences instead of an obviously
+  // repeated placeholder — per explicit user request. Text itself
+  // stays generic/non-revealing; only the line length changes.
+  const placeholders = [
+    'Unlocks after purchase',
+    'This section unlocks once you get the full report',
+    'Unlocks after purchase — full detail inside',
+    'This part of your results is included in the full unlocked report',
+  ];
   return `
     <div class="rp-locked">
       <p class="rp-locked-heading">${escapeHtml(heading)}</p>
@@ -204,6 +226,8 @@ function renderHero(data, typeKey, typeLabel, overallPct, level, inattentiveScor
       <svg class="rp-hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0,50 C260,115 460,5 720,45 C980,85 1180,10 1440,55 L1440,120 L0,120 Z" style="fill:var(--white);"></path>
       </svg>
+      <div class="rp-hero-float">${illustrationSlot('hero', 'float')}</div>
+      <p class="rp-hero-disclaimer">${escapeHtml(DISCLAIMER)}</p>
       <div class="rp-band-inner">
         <div class="rp-hero-head">
           <div class="rp-hero-top-row">
@@ -215,17 +239,19 @@ function renderHero(data, typeKey, typeLabel, overallPct, level, inattentiveScor
         </div>
       </div>
     </section>
-    <section class="rp-band rp-band-a">
+    <section class="rp-band rp-band-a rp-hero-body-band">
       <div class="rp-band-inner">
-        ${illustrationSlot('hero')}
-        <div class="rp-body">${h.body.map((p) => `<p>${escapeHtml(p)}</p>`).join('')}</div>
-        <div class="rp-bars-card" style="margin-top:10px;">
+        <div class="rp-hero-text-col">
+          <div class="rp-body">${h.body.slice(0, 2).map((p) => `<p>${escapeHtml(p)}</p>`).join('')}</div>
+        </div>
+        <div class="rp-bars-card">
           <p style="font-weight:800;font-size:15px;color:var(--ink);margin:0 0 4px;">Overall pattern strength: ${overallPct}% · ${escapeHtml(level)}</p>
           ${specRow('Inattentive', inattentiveScore, 'var(--accent)')}
           ${specRow('Hyperactive-impulsive', hyperactiveScore, 'var(--dataviz-coral)')}
         </div>
-        <p class="disclaimer">${escapeHtml(DISCLAIMER)}</p>
-        <p style="font-weight:600;font-size:14px;color:var(--ink-faint);margin-top:8px;">${escapeHtml(CREDIBILITY_LINE)}</p>
+        <div class="rp-hero-text-col">
+          <div class="rp-body">${h.body.slice(2).map((p) => `<p>${escapeHtml(p)}</p>`).join('')}</div>
+        </div>
       </div>
     </section>`;
 }
@@ -269,7 +295,7 @@ function renderSimpleSection(def, sectionData, heading, typeKey, resultId) {
         ${illustrationSlot(def.id)}
         <p class="rp-hook">${escapeHtml(sectionData.hook)}</p>
         <div class="rp-body">${(sectionData.body || []).map((p) => `<p>${escapeHtml(p)}</p>`).join('')}</div>
-        ${listBlock(sectionData.list_items)}
+        ${def.id === 'type' ? plainCardGrid(sectionData.list_items) : listBlock(sectionData.list_items)}
         ${lockedBlock({ heading: def.lockedHeadingTpl ? sub(def.lockedHeadingTpl, typeKey, '') : def.lockedHeading, firstLine: sectionData.locked_first_line, product: def.product, typeKey, resultId })}
       </div>
     </section>`;
@@ -407,8 +433,8 @@ export function renderTypeResultsPage({ typeKey, typeLabel, data, overallPct, le
         ${tocHtml(typeLabel, resultId)}
         <div class="rp-main">
           ${heroHtml}
-          ${renderSave(saveDef, resultId)}
           ${areasHtml}
+          ${renderSave(saveDef, resultId)}
           ${renderSimpleSection(typeDef, data.type_guide, typeHeading, typeKey, resultId)}
           <section class="${bandClass(specialDef)}">
             <div class="rp-band-inner">

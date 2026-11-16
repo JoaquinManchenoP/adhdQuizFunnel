@@ -25,15 +25,21 @@ export const inattentiveData = {
   typeLabel: 'Inattentive',
 
   hero: {
-    hook: "This means your brain struggles to stay focused. It does not mean you can't sit still. You get distracted, forget things, and lose track of tasks.",
+    // hook: currently unused by template.js (dead field), kept in sync
+    // with the reference's own hero subtitle anyway for consistency.
+    hook: "A closer look at your daily habits, work, growth, and relationships.",
+    // body: verbatim from the reference file's #overview intro (4 paragraphs).
     body: [
-      "Inattentive ADHD is one of three types in the DSM-5. The other two are hyperactive-impulsive and combined. This type is about losing focus, not about moving too much.",
-      "It's quiet. It doesn't disrupt a room. That's why it gets missed, or mistaken for anxiety or depression. This page covers what it looks like and what helps.",
+      "With inattentive ADHD, your attention may not always follow your intentions. ADHD is a neurodevelopmental condition, meaning it involves how the brain develops and works, and genes play a strong role. In this presentation, difficulties with attention and organization are more prominent than hyperactivity. You may appear quiet while your mind moves between thoughts, surrounding activity, and the task in front of you.",
+      "Your interest can make a noticeable difference in how you approach everyday life. An engaging subject may hold your attention, while a simple responsibility takes repeated effort to begin. You can understand what needs to happen and still struggle to act. Recognizing this pattern helps you identify where clearer instructions, smaller steps, or outside support could make a difference.",
+      "Daily responsibilities can require more effort than others see. Remembering appointments, keeping track of belongings, and finishing tasks may each demand your full attention. When several demands arrive together, you can lose track of something important despite trying hard to stay organized. Keeping information somewhere visible can reduce how much you need to remember at once.",
+      "Your experience is individual. Inattentive ADHD does not determine your personality, interests, or abilities. Understanding how it affects you gives you a practical starting point for choosing helpful routines, communicating your needs, and making plans that fit your daily life.",
     ],
   },
 
   areas: {
-    hook: "These 5 areas show why your result landed where it did.",
+    // hook: verbatim from the reference file's #attention section intro.
+    hook: "Inattentive ADHD can affect several parts of daily life. You may find some of these areas much harder than others. Use them to notice patterns in your experience rather than judge your abilities.",
     tooltips: {
       time: "Losing track of time.",
       overload: "Struggling to juggle more than one thing at once.",
@@ -70,52 +76,66 @@ export const inattentiveData = {
   },
 
   work: {
-    hook: "At work, you do well on what interests you. You struggle with the rest.",
+    // hook + strengths/challenges: verbatim from the reference file's
+    // #career section (its 2 intro paragraphs, then its "Your
+    // Strengths"/"Your Weaknesses" cards — title+paragraph combined per
+    // item since this schema's arrays are flat strings, no title field).
+    hook: "At work, clear expectations can make a considerable difference. You may find it easier to make progress when you know what matters most, what a finished task should look like, and when it is due. Broad instructions and constantly changing priorities can leave you spending more time deciding what to do than doing it. Your career choices should reflect your interests and skills. Inattentive ADHD does not point to one ideal profession. A role that suits you will also need working conditions that help you manage attention, deadlines, and routine responsibilities.",
     strengths: [
-      "You focus hard on work you find interesting",
-      "You make unusual connections others miss",
-      "You work well alone once you're actually started",
-      "You spot the big picture while others miss it",
+      "Knowledge in Your Interests: Subjects that hold your attention may lead you to develop valuable knowledge. Look for opportunities to apply what you already enjoy learning.",
+      "Awareness of Helpful Conditions: Knowing when and where you work well can help you plan demanding tasks more effectively.",
+      "Practical Experience: Methods you have developed to manage your own difficulties may also help you simplify confusing tasks or processes.",
+      "Clear Communication: Explaining what you need can prevent avoidable mistakes. Asking for written priorities or an example of the expected result gives everyone a clearer starting point.",
     ],
     challenges: [
-      "Repetitive, detail-heavy work drains you fast",
-      "You miss deadlines from losing track of time, not from laziness",
-      "Multi-step instructions slip away unless you write them down right away",
-      "Your performance looks inconsistent. Great some weeks, checked out others",
+      "Routine Administration: Forms, expenses, and email can pile up while more engaging work holds your attention. Give these tasks a regular place in your schedule.",
+      "Unclear Assignments: A large task without defined steps can be difficult to begin. Agree on the first milestone before starting.",
+      "Frequent Interruptions: Each interruption can make it harder to return to your original task. Leave yourself a brief note about what comes next.",
+      "Final Details: You may complete the main work and overlook the last check or submission. Include those steps in your task list.",
+      "Taking On Too Much: Several interesting projects can quickly become competing demands. Check your existing commitments before accepting another.",
     ],
-    locked_first_line: "The fix isn't trying harder. It's changing how the boring parts reach you.",
+    locked_first_line: "A job title tells you less than a clear picture of an ordinary working day.",
   },
 
   daily: {
-    hook: "Day to day, time slips away and things get lost.",
+    // hook + strengths/challenges: verbatim from the reference file's
+    // #growth section (its 2 intro paragraphs, then its first
+    // comparison's "Your Strengths"/"Your Weaknesses" cards).
+    hook: "Personal growth starts with understanding where your effort is going. You may spend considerable energy remembering tasks, recovering from distractions, or worrying about unfinished work. Noticing these patterns helps you choose a specific problem to address. Small changes are easier to assess and adjust. Try one reminder, one clearer routine, or one simpler way to begin a recurring task. Keep what helps and change what adds unnecessary work.",
     strengths: [
-      "You can lose yourself in a hobby for hours",
-      "You notice details others miss",
-      "You do well with unstructured time",
-      "You're curious about a lot of things",
+      "Knowing Yourself: Recognize the situations in which you need more time, clearer information, or fewer distractions.",
+      "Asking for Support: Describe the difficulty clearly enough that someone can help with the actual problem.",
+      "Setting Realistic Goals: Plan around the time and energy you have available.",
+      "Noticing Progress: Look for improvements in daily life, such as fewer missed appointments or less time spent finding things.",
+      "Returning After a Disruption: Make it easy to restart a useful habit after a difficult day.",
     ],
     challenges: [
-      "You forget bills and appointments. Not from carelessness. They just slipped your mind",
-      "You lose your keys, phone, or paperwork almost every week",
-      "A 20-minute task can take 2 hours with no idea why",
-      "Having a plan for the day doesn't mean you follow it",
+      "Changing Everything at Once: Several new routines can become another set of responsibilities. Begin with the change most likely to help.",
+      "Waiting for Motivation: A task may remain important even when it feels uninteresting. Prepare a small starting step in advance.",
+      "Making Plans Too Complicated: A detailed system is only useful if you can keep using it.",
+      "Judging Yourself by One Day: An unusually productive or difficult day gives you only part of the picture.",
+      "Avoiding an Overdue Task: The longer a task waits, the harder it may feel to face. Start by checking what is still needed.",
     ],
     locked_first_line: "Systems fix this faster than willpower does.",
   },
 
   relationships: {
-    hook: "People read this as not caring. It's attention, not affection.",
+    // hook + strengths/challenges: verbatim from the reference file's
+    // #relationships section (its 2 intro paragraphs, then its first
+    // comparison's "Your Strengths"/"Your Weaknesses" cards).
+    hook: "Inattentive ADHD can affect how you listen, remember plans, and keep in touch. You may care about someone and still forget to reply or lose track of a conversation. Other people may see the missed message or forgotten detail without seeing the effort behind it. Clear communication helps both of you understand what is happening. Explain the difficulties you notice, ask what the other person needs, and agree on practical ways to manage shared responsibilities. Understanding the reason for a problem is most useful when it leads to a workable change.",
     strengths: [
-      "You're fully present once you're actually tuned in",
-      "You pick up on how someone feels, even if you miss the details",
-      "You're easygoing and rarely start conflict",
-      "You're loyal, even when you're inconsistent",
+      "Honesty About Your Needs: Explaining when you are distracted or overwhelmed helps others understand your behavior.",
+      "Interest in Shared Activities: Spending time doing something you both enjoy gives you a natural way to connect.",
+      "Willingness to Repair Mistakes: Acknowledging a missed commitment and taking action can help rebuild trust.",
+      "Attention to What Works: Remember the habits that help you stay connected and make them easier to repeat.",
     ],
     challenges: [
-      "Forgetting what someone said reads as not listening",
-      "You zone out mid-conversation, even when you're interested",
-      "Being late reads as not caring, not as a time problem",
-      "People get frustrated when you need things repeated",
+      "Forgotten Replies: You may read a message, intend to answer, and then forget. A reminder can help you return to it.",
+      "Missed Details: You may lose part of a conversation while thinking about something that was said earlier. Ask for clarification when you need it.",
+      "Uneven Attention: Being absorbed in another activity can make you seem unavailable. Agree on times when you can give the conversation your attention.",
+      "Unclear Responsibilities: A general plan to help more can leave both people frustrated. Decide who will do what and when.",
+      "Avoiding Difficult Conversations: Worry about disappointing someone may lead you to delay speaking. Bringing up the problem earlier gives you more room to solve it.",
     ],
     locked_first_line: "Explaining this type to someone close to you fixes most of this.",
   },
@@ -132,9 +152,11 @@ export const inattentiveData = {
   },
 
   assessment: {
-    hook: "Get checked if this pattern has followed you your whole life, shows up everywhere, and is wearing you down.",
+    // hook + body: verbatim from the reference file's #next section
+    // (its closing band quote, then its final closing paragraph).
+    hook: "Choose one difficulty that regularly affects your work, home life, or relationships. Look at when it happens, what gets in the way, and what would make the next step easier. Start with a change small enough to use on an ordinary day.",
     body: [
-      "This type rarely causes problems early on, so most people reach adulthood before anyone checks. Often it's a bigger role, like college, a new job, or a kid, that finally overwhelms the coping habits that used to work. Only a real assessment can rule out anxiety, depression, or a thyroid issue, which can look similar.",
+      "Your understanding becomes useful when it changes how you plan, ask for help, or respond to a problem. Over time, those decisions can make daily responsibilities easier to manage and leave more room for your interests and goals.",
     ],
     locked_first_line: "A good assessment looks at your whole life, not just today.",
   },

@@ -86,8 +86,7 @@ export function upgradePrice(targetProduct, paidProduct) {
 }
 
 /* ---------------- Fixed copy (verbatim) ---------------- */
-export const DISCLAIMER = "A look at your patterns, not a diagnosis. Only a professional assessment can confirm ADHD.";
-export const CREDIBILITY_LINE = "Built around the five areas of executive function described by ADHD researcher Dr. Russell Barkley.";
+export const DISCLAIMER = "This is not an ADHD diagnosis. For a diagnosis, consult a licensed professional.";
 
 // Approved warm data-viz palette only (adhd-ui + quiz-funnel-adhd-ui
 // extension) — never gray/ink as a fill.

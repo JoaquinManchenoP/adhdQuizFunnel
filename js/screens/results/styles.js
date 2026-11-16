@@ -35,8 +35,17 @@ const CSS = `
 }
 /* 20px side padding here is exactly what each .rp-band's -20px margin
    cancels, so a band's background bleeds flush to the real viewport
-   edge on mobile while its content stays inset — see .rp-band below. */
-.rp-shell { width: 100%; max-width: 640px; margin: 0 auto; padding: 0 20px 48px; box-sizing: border-box; }
+   edge on mobile while its content stays inset — see .rp-band below.
+   max-width was a flat 640px, which is ~100% on phones (640 never
+   binds below that width) but left large dead margins on tablet-ish
+   widths up to the 1024px desktop breakpoint below, where the fixed
+   640px cap started binding well before the viewport did — down to
+   ~62% of the page at 1023px. max(640px, 95vw) keeps phones exactly as
+   they were (640px still wins under ~674px wide) while guaranteeing
+   the shell never drops under 95% of the viewport from there up to
+   the desktop breakpoint, where the 1024px media query below takes
+   over with its own fixed 1260px value regardless. */
+.rp-shell { width: 100%; max-width: max(640px, 95vw); margin: 0 auto; padding: 0 20px 48px; box-sizing: border-box; }
 .rp-h1 {
   font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.12;
   color: var(--ink); margin: 6px 0 10px;
@@ -70,6 +79,45 @@ const CSS = `
 /* Sized for the hero's own type-badge slot — bigger than the circle
    avatar, smaller than the full-width illustration below the hero. */
 .rp-illustration.rp-illustration-md { height: 92px; width: 92px; margin: 0; flex-shrink: 0; border-radius: 20px; font-size: 9px; background: var(--white); }
+
+/* ---- Hero image + body copy, 2-column (image 1/3, text 2/3) ----
+   Was stacked (full-width image on top, body text below) — reorganized
+   per request into a row. Scoped override on .rp-illustration's height
+   below (not a change to the shared class, which other illustration
+   slots on this page still use at their own default 260px) since a
+   260px-tall box in a now much narrower 1/3 column reads as an odd
+   tall sliver rather than a photo-shaped panel. */
+/* Equal 36px gap above and below this row (this specific band's own
+   padding-top is bumped to match, just below — scoped to .rp-hero-
+   body-band, not the shared .rp-band default, since other 'a'-colored
+   bands on the page must keep their own padding) and the same 36px
+   again before .rp-bars-card right after it — three evenly-spaced
+   components in this band instead of mismatched ad-hoc margins. (This
+   doesn't fold in the hero band's own padding-bottom above — that's
+   reserved specifically for the wave divider shape, a different kind
+   of space, not a plain inter-component gap.) */
+.rp-band.rp-hero-body-band { padding-top: 36px; }
+/* Image column retired from this row — the hero illustration now lives
+   up in the header band itself (.rp-hero-float, below) — so the text
+   simply takes the full width it used to share with that column. */
+.rp-hero-text-col { margin: 0 0 36px; }
+.rp-hero-text-col .rp-body { margin: 0; }
+
+/* Hero illustration, floating in the header's own lower-right corner.
+   Sibling of .rp-band-inner (not nested inside it) so it's positioned
+   against the header band's actual edge, not the centered/max-width
+   content column — and placed after .rp-hero-wave in source order so
+   it naturally paints above the wave without needing z-index. Reuses
+   .rp-locked-overlay's existing "floating card" shadow
+   (0 10px 30px rgba(0,0,0,.08)) for the same elevated feel already
+   established elsewhere on this page, rather than inventing a new one.
+   pointer-events:none since it's decorative (aria-hidden in the slot
+   itself) and must never block taps on anything beneath it. */
+.rp-hero-float { position: absolute; right: 20px; bottom: 16px; width: 120px; pointer-events: none; }
+.rp-illustration.rp-illustration-float {
+  height: 120px; width: 100%; margin: 0; font-size: 8px;
+  border-radius: 20px; background: var(--white); box-shadow: 0 10px 30px rgba(0,0,0,.08);
+}
 
 /* ---- Bands: each major section is a full-bleed (mobile) / rounded
    panel (desktop) alternating-background block, echoing the reference
@@ -106,7 +154,12 @@ const CSS = `
    92px/112px) so the text block sits centered between the top edge
    and the wave, instead of sitting high with a lot of reserved-for-
    the-wave space below it. */
-.rp-band.rp-band-hero { background: var(--marigold-50); --rp-band-bg: var(--marigold-50); padding-top: 92px; padding-bottom: 92px; overflow: hidden; }
+/* z-index:0 pins this band's own stacking context explicitly below the
+   floating sidebar's z-index:6 (.rp-toc-desktop) — the two visually
+   overlap near the top of the page once the sidebar floats free of
+   the row, so this band's cream background needs to stay under it,
+   not relying on implicit z-index:auto ordering for that. */
+.rp-band.rp-band-hero { background: var(--marigold-50); --rp-band-bg: var(--marigold-50); padding-top: 92px; padding-bottom: 92px; overflow: hidden; position: relative; z-index: 0; }
 /* Unique shape for this band only (not the shared diagonal .rp-band-cut
    every other band uses) — a smooth wave bottom edge instead of a
    straight cut, filled in the next band's own background color
@@ -126,8 +179,17 @@ const CSS = `
 .rp-section-head { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; scroll-margin-top: 90px; }
 /* Outline badge — white fill, accent-deep ring, ink number — not a
    solid accent-filled dot, per the reference's own numbered circles. */
+/* display:flex made this a block-level box sitting inside the heading's
+   own inline text flow (num + title are both inline content of one
+   <h2>, not flex siblings) — its vertical position relative to the
+   title text was then whatever the browser's inline-level blockifying
+   fallback happened to produce, not a real alignment. inline-flex +
+   vertical-align:middle makes it a proper inline-level box centered on
+   the title's own middle, same pairing used for inline icon+text
+   combos elsewhere on this page (e.g. .rp-tooltip). */
 .rp-section-num {
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  vertical-align: middle; margin-right: 10px;
   width: 30px; height: 30px; border-radius: 50%; background: var(--white);
   border: 2px solid var(--accent-alt-deep);
   font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink);
@@ -224,6 +286,26 @@ h2.rp-h2 {
   color: var(--marigold-500); opacity: 1;
   text-transform: uppercase; letter-spacing: .02em; white-space: nowrap;
 }
+/* Disclaimer, living in the header itself per explicit user request.
+   Positioned absolute (sibling of .rp-band-inner, same technique as
+   .rp-hero-float just above) rather than pushed down with margin —
+   margin would grow .rp-band-hero's own height since the band isn't a
+   fixed size, it just wraps its content plus fixed padding; this way
+   it sits low in the band's own reserved bottom padding without
+   changing the band's size at all. bottom value clears .rp-hero-wave's
+   own height (68px here, 86px at the 1024px override below) with a
+   small buffer so the curve never runs through the text. Same
+   --on-accent-label hue the rest of this band's text uses, at reduced
+   opacity (the same "lighter than the line above it" technique
+   .rp-hero-type-lead's own color already establishes) to keep it
+   legible without pulling focus. right is inset past .rp-hero-float's
+   own right:20px + width:120px (plus a buffer) so the two never
+   overlap — recalculated for the floating illustration's desktop
+   right:44px + width:170px at the 1024px override below. */
+.rp-hero-disclaimer {
+  position: absolute; left: 20px; right: 160px; bottom: 80px;
+  margin: 0; font-weight: 600; font-size: 11px; line-height: 1.45; color: var(--on-accent-label); opacity: .55;
+}
 /* Follow-up (round 4): the stat badge used to sit inline after the hook
    paragraph, in a left-aligned row — read as disconnected, bolted on
    below a block of text. Moved it up to sit right next to the title
@@ -242,7 +324,22 @@ h2.rp-h2 {
    100% strength, not a named bipolar pair like the reference's own
    dimensions. Sits in a plain card shell (--card bg, 2px --border, 22px
    radius — the quiz-funnel-adhd-ui data-viz container shape). */
-.rp-bars-card { background: var(--card); border: 2px solid var(--border); border-radius: 22px; padding: 24px; box-sizing: border-box; }
+/* margin-top gives the heading+hook text above it (e.g. section 1's
+   "Your results across 5 areas" + its hook line) real breathing room
+   from the card, instead of the 10px .rp-hook already has on its own
+   (too tight, reading as if the text sat on/inside the card's edge).
+   The hero's own .rp-bars-card usage overrides this via the more
+   specific .rp-hero-body-band .rp-bars-card rule below, so this only
+   actually affects the areas section's card. */
+.rp-bars-card { background: var(--card); border: 2px solid var(--border); border-radius: 22px; padding: 24px; margin-top: 20px; box-sizing: border-box; }
+/* Scoped to this band only — the "areas" section reuses .rp-bars-card
+   too, with its own unrelated spacing right after its hook paragraph,
+   which must stay untouched.
+   margin-bottom added to match margin-top: paragraphs 3-4 now sit
+   right after this card (see renderHero's second .rp-hero-text-col),
+   and that element's own margin-top is 0, so without this the card
+   had a 36px gap above but none below. */
+.rp-hero-body-band .rp-bars-card { margin-top: 36px; margin-bottom: 36px; }
 .rp-spec-row { margin-bottom: 30px; }
 .rp-spec-row:last-child { margin-bottom: 0; }
 .rp-spec-name { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; color: var(--ink); margin-bottom: 18px; }
@@ -284,6 +381,16 @@ h2.rp-h2 {
 .rp-feature-icon.warn { background: var(--chip-yellow); }
 .rp-feature-icon.chip { width: 20px; height: 20px; border-radius: 6px; background: var(--chip-yellow); margin-top: 2px; }
 .rp-feature-item span { display: block; font-weight: 700; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+
+/* Plain neutral 2-column card grid — the type section's list_items
+   only (see template.js's plainCardGrid), matching a reference layout
+   the user supplied: no icon, just a thin top-border divider ahead of
+   the bold text, same text style .rp-feature-item span already uses
+   for visual consistency with the rest of the page. Column
+   breakpoints mirror .rp-feature-grid's own (480px/1024px) above. */
+.rp-plain-grid { display: grid; grid-template-columns: 1fr; gap: 14px 24px; margin: 0 0 6px; }
+.rp-plain-card { border-top: 1.5px solid var(--border); padding-top: 14px; }
+.rp-plain-card span { display: block; font-weight: 700; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
 
 /* ---- Locked blocks: the real heading + first line (required, always
    shown, never blurred), then the SAME feature-grid shape as above
@@ -372,21 +479,57 @@ h2.rp-h2 {
    desktop pattern is the landing-page hero/feature-grid shape); this
    reuses only existing tokens/radii/shadows for it, see the report. */
 @media (min-width: 1024px) {
+  .rp-hero-float { right: 44px; bottom: 26px; width: 170px; }
+  .rp-illustration.rp-illustration-float { height: 170px; }
+  /* Mirrors .rp-hero-float's bump just above — left/bottom match the
+     band's own larger desktop padding (44px/112px), right clears the
+     floating illustration's wider desktop box (right:44px + 170px +
+     buffer), bottom clears the taller 86px wave below. */
+  .rp-hero-disclaimer { left: 44px; right: 234px; bottom: 96px; }
   /* T023: widened further on top of the earlier 680/600 -> 760/720
      bump (see git log) per explicit user request for more breathing
      room. .rp-shell 1140 -> 1260, .rp-main 760 -> 880, .rp-band-inner
      720 -> 800 below — kept proportional to the sidebar's own fixed
      240px/48px-gap (240 + 48 + 880 = 1168, comfortably inside the
      shell's 1260 - 80px padding = 1180px inner width) and still well
-     short of a 1000px+ reading-width text column. */
-  .rp-shell { max-width: 1260px; display: flex; gap: 48px; align-items: flex-start; padding: 56px 40px 80px; }
-  .rp-main { flex: 1; min-width: 0; max-width: 880px; }
+     short of a 1000px+ reading-width text column.
+     Follow-up: per explicit user request, the gap to the sidebar was
+     tightened (48 -> 32, pulling the sidebar closer/leftward) and
+     .rp-main widened (880 -> 950) so the main column takes up more of
+     the row. .rp-shell's own cap was bumped 1260 -> 1320 to give that
+     extra width room without eating into the sidebar (240 + 32 + 950 =
+     1222, comfortably inside the new 1320 - 80px padding = 1240px
+     inner width).
+     Follow-up: the sidebar was taken out of this flex row entirely —
+     see .rp-toc-desktop below, now position:fixed and floating over
+     the page instead of reserving its own column — so .rp-main is the
+     row's only flex child now and .rp-shell's gap no longer has a
+     second item to apply to (left declared; harmless no-op). .rp-main
+     widened again (950 -> 1100) to reclaim the space the sidebar used
+     to occupy, now that nothing else in the row needs it.
+     Follow-up: 1100 was too wide per explicit user feedback — dialed
+     back to 900. */
+  .rp-shell { max-width: 1320px; display: flex; gap: 32px; align-items: flex-start; padding: 56px 40px 80px; }
+  .rp-main { flex: 1; min-width: 0; max-width: 900px; }
   .rp-toc-mobile { display: none; }
+  /* Taken out of the flex row via position:fixed (was sticky, which
+     still reserved its own 240px column) — it now floats directly
+     over the page instead, per explicit user request. 'right' mirrors
+     .rp-shell's own centering math: once the viewport exceeds the
+     shell's 1320px cap, max() keeps the card pinned the same 40px
+     inset from the shell's actual right edge rather than drifting
+     toward the real viewport edge as the outer margin grows; below
+     that cap (shell == 100vw, no outer margin) it falls back to a
+     flat 40px matching .rp-shell's own side padding. z-index sits
+     above .rp-toc-mobile's own 5 and the shadow reuses this file's
+     established "floating card" value (see .rp-locked-overlay /
+     .rp-hero-float) for a consistent elevated look. */
   .rp-toc-desktop {
     display: flex; flex-direction: column; gap: 14px;
-    position: sticky; top: 40px; width: 240px; flex-shrink: 0;
+    position: fixed; top: 40px; right: max(40px, calc((100vw - 1320px) / 2 + 40px));
+    width: 240px; flex-shrink: 0; z-index: 6;
     background: var(--white); border: 2px solid var(--border); border-top: 4px solid var(--accent-alt-deep);
-    border-radius: 18px; padding: 18px;
+    border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.08);
   }
   .rp-toc-badge { display: flex; align-items: center; gap: 10px; }
   .rp-toc-badge .label-eyebrow { font-size: 12px; font-weight: 700; color: var(--ink-faint); margin: 0 0 2px; }
@@ -413,8 +556,15 @@ h2.rp-h2 {
   /* .rp-band-inner's base 600px cap (set above, used on mobile/tablet
      too) was the real bottleneck for "cramped" at desktop width — .rp-
      main's own max-width increase just above does nothing if every
-     band's actual text column still clamps to 600px inside it. */
-  .rp-band-inner { max-width: 800px; }
+     band's actual text column still clamps to 600px inside it.
+     Follow-up: raised 800 -> 860 alongside .rp-main's 880 -> 950 bump
+     above — each band's own 44px/side padding (88 total) subtracted
+     from 950 leaves 862px of content room, so 860 actually reaches it
+     instead of leaving the extra width unused as dead padding.
+     Follow-up: raised again, 860 -> 1010, alongside .rp-main's 950 ->
+     1100 bump (1100 - 88 = 1012 of content room).
+     Follow-up: dialed back to 810 alongside .rp-main's 1100 -> 900. */
+  .rp-band-inner { max-width: 810px; }
   .rp-h1 { font-size: 46px; }
   .rp-hero-headline { font-size: 68px; }
   .rp-band.rp-band-hero { padding-top: 112px; padding-bottom: 112px; }
@@ -424,6 +574,7 @@ h2.rp-h2 {
   .rp-hero-type-emphasis { font-size: 38px; }
   h2.rp-h2 { font-size: 28px; }
   .rp-feature-grid { grid-template-columns: 1fr 1fr; }
+  .rp-plain-grid { grid-template-columns: 1fr 1fr; }
   .rp-band { margin: 0 0 20px; padding: 44px 44px 58px; border-radius: 28px; clip-path: none !important; }
   .rp-band:first-of-type { padding-top: 44px; }
   .rp-band.rp-band-hero:first-of-type { padding-top: 112px; }
@@ -433,6 +584,7 @@ h2.rp-h2 {
 
 @media (min-width: 480px) {
   .rp-feature-grid { grid-template-columns: 1fr 1fr; }
+  .rp-plain-grid { grid-template-columns: 1fr 1fr; }
 }
 `;
 
